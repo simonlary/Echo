@@ -2,7 +2,6 @@
 
 ## Dependencies
 - NodeJS
-- FFMPEG
 
 ## Configuration file
 The configuration file is required to setup the bot. You need to add:
