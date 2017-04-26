@@ -1,16 +1,17 @@
 {
-	"name": "music-bot",
-	"version": "1.0.0",
-	"description": "",
-	"main": "bot.js",
-	"author": "",
-	"license": "MIT",
-	"dependencies": {
-		"discord.js": "^11.0.0",
-		"node-opus": "^0.2.4",
-		"ytdl-core": "^0.9.1"
-	},
-	"scripts": {
-		"start": "node bot.js"
-	}
+  "name": "Echo",
+  "version": "1.0.0",
+  "description": "",
+  "main": "bot.js",
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "discord.js": "^11.0.0",
+    "ffmpeg-binaries": "^3.2.2-3",
+    "node-opus": "^0.2.4",
+    "ytdl-core": "^0.9.1"
+  },
+  "scripts": {
+    "start": "node bot.js"
+  }
 }
