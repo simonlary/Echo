@@ -41,7 +41,7 @@ const AddToQueue = function (url, message) {
 	});
 };
 
-let current = [];
+let current = {};
 let queues = {};
 
 exports.commands = {

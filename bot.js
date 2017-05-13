@@ -72,9 +72,6 @@ bot.on('ready', () => {
 });
 
 bot.on("message", (message) => CheckMessageForCommand(message));
-bot.on("messageUpdate", (oldMessage, newMessage) => {
-	CheckMessageForCommand(newMessage);
-});
 
 bot.login(config.token);
 
