@@ -22,7 +22,7 @@ const PlayNext = function (voiceConnection) {
 	if (queues[guildId] == undefined || queues[guildId].queue.length == 0)
 		return;
 	current[guildId] = queues[guildId].queue.shift();
-	queues[guildId].dispatcher = voiceConnection.playStream(ytdl.downloadFromInfo(current[guildId], { filter: "audioonly" }));
+	queues[guildId].dispatcher = voiceConnection.playStream(ytdl.downloadFromInfo(current[guildId], { filter: "audioonly" }), { volume: queues[guildId].volume });
 	queues[guildId].dispatcher.on("end", function (reason) {
 		if (queues[guildId] != undefined)
 			delete queues[guildId].dispatcher;
@@ -189,6 +189,29 @@ exports.commands = {
 			else
 			{
 				message.reply("The bot is not in any room");
+			}
+		}
+	},
+	"volume": {
+		usage: "volume <1-100>",
+		description: "Set the volume between 0-100",
+		process: function (bot, message, params) {
+			if (params[0] == undefined)
+			{
+				exports.commands["help"].process(bot, message, "volume");
+				return;
+			}
+
+			var volume = Math.abs(params[0]) / 100;
+			volume = (volume > 1) ? 1 : volume;
+
+			if (queues[message.guild.id] != undefined)
+			{
+				queues[message.guild.id].volume = volume;
+				if (queues[message.guild.id].dispatcher != undefined)
+				{
+					queues[message.guild.id].dispatcher.setVolumeLogarithmic(volume);
+				}
 			}
 		}
 	},
