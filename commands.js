@@ -180,11 +180,12 @@ exports.commands = {
 	},
 	"volume": {
 		usage: "volume <1-100>",
-		description: "Set the volume between 0-100",
+		description: "Set the volume between 1-100",
 		process: function (bot, message, params) {
 			if (params[0] == undefined)
 			{
-				exports.commands["help"].process(bot, message, "volume");
+				// Show the current volume
+				message.reply("Current volume : " + queues[message.guild.id].volume * 100);
 				return;
 			}
 
@@ -235,7 +236,8 @@ exports.commands = {
 							channel[1].join();
 							queues[message.guild.id] = {
 								dispatcher: undefined,
-								queue: []
+								queue: [],
+								volume: 1
 							};
 							return;
 						}

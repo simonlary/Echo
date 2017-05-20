@@ -8,7 +8,6 @@ let commands = {};
 let customAudios = {};
 
 const ReadFolder = function (folder) {
-	console.log(folder);
 	let elems = [];
 	let files = fs.readdirSync(folder);
 	files.forEach(function (file, index) {
@@ -100,7 +99,6 @@ for (let cmd in src.commands)
 }
 config.audioCommands.forEach(customCommand => {
 	// Load audio files
-	console.log(path.join(__dirname, customCommand.folder));
 	customAudios[customCommand.command] = ReadFolder(path.join(__dirname, customCommand.folder));
 	// Add the command
 	commands[customCommand.command] = {
@@ -114,7 +112,6 @@ config.audioCommands.forEach(customCommand => {
 
 			if (message.guild.voiceConnection != undefined)
 			{
-				console.log(customAudios[customCommand.command][Math.floor(Math.random() * customAudios[customCommand.command].length)]);
 				message.guild.voiceConnection.playFile(customAudios[customCommand.command][Math.floor(Math.random() * customAudios[customCommand.command].length)]);
 			}
 		}
