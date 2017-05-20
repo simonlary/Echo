@@ -17,6 +17,7 @@ jsconfig.json
 .vscode
 # -------------[ NodeJS ]------------------------------ #
 node_modules
+npm-debug.log
 # -------------[ Output for downloaded files ]----------------------- #
 output
 # -------[Config file]-------- #

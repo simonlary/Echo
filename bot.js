@@ -53,7 +53,27 @@ if (fs.existsSync("bot.config") == false)
 	console.error("No config found. Please create a 'bot.config' file.");
 	process.exit();
 }
-const config = JSON.parse(fs.readFileSync('bot.config', 'utf8'));
+let configFile = {};
+try
+{
+	configFile = JSON.parse(fs.readFileSync('bot.config', 'utf8'));
+} catch (e)
+{
+	console.error("Invalid configuration file : Your 'bot.config' file doesn't contain valid JSON.");
+	process.exit();
+}
+// Check if necessary parameters are present
+if (configFile.token == undefined)
+{
+	console.error("Missing bot token : You need a Discord bot token in your configuration file.");
+	process.exit();
+}
+// Set default parameters if not present in config file
+const config = {
+	token: configFile.token,
+	link: configFile.link || "https://discordapp.com/oauth2/authorize?client_id=284486730633969664&scope=bot"
+};
+console.log(config);
 
 ////////////////////
 //  LOAD COMMANDS //
