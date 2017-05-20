@@ -88,7 +88,6 @@ if (configFile.token == undefined)
 const config = {
 	token: configFile.token,
 	audioCommands: (Array.isArray(configFile.audioCommands)) ? configFile.audioCommands : [],
-	link: configFile.link || "https://discordapp.com/oauth2/authorize?client_id=284486730633969664&scope=bot"
 };
 
 ////////////////////

@@ -11,7 +11,11 @@
 		"node-opus": "^0.2.4",
 		"ytdl-core": "^0.9.1"
 	},
+	"devDependencies": {
+		"nodemon": "^1.11.0"
+	},
 	"scripts": {
-		"start": "node bot.js"
+		"start": "node bot.js",
+		"test": "nodemon bot.js"
 	}
 }
