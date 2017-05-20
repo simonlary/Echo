@@ -5,6 +5,22 @@ const Discord = require('discord.js');
 const bot = new Discord.Client();
 
 let commands = {};
+let customAudios = {};
+
+const ReadFolder = function (folder) {
+	console.log(folder);
+	let elems = [];
+	let files = fs.readdirSync(folder);
+	files.forEach(function (file, index) {
+		let filePath = path.join(folder, file);
+		let stats = fs.statSync(filePath);
+		if (!stats.isDirectory())
+		{
+			elems.push(filePath);
+		}
+	});
+	return elems;
+};
 
 const HasPermission = function (user, guild, permission) {
 	if (permission == undefined)
@@ -71,9 +87,9 @@ if (configFile.token == undefined)
 // Set default parameters if not present in config file
 const config = {
 	token: configFile.token,
+	audioCommands: (Array.isArray(configFile.audioCommands)) ? configFile.audioCommands : [],
 	link: configFile.link || "https://discordapp.com/oauth2/authorize?client_id=284486730633969664&scope=bot"
 };
-console.log(config);
 
 ////////////////////
 //  LOAD COMMANDS //
@@ -83,6 +99,28 @@ for (let cmd in src.commands)
 {
 	commands[cmd] = src.commands[cmd];
 }
+config.audioCommands.forEach(customCommand => {
+	// Load audio files
+	console.log(path.join(__dirname, customCommand.folder));
+	customAudios[customCommand.command] = ReadFolder(path.join(__dirname, customCommand.folder));
+	// Add the command
+	commands[customCommand.command] = {
+		usage: customCommand.command,
+		description: "Play a random audio from the " + customCommand.command + " folder.",
+		process: function (bot, message, params) {
+			if (message.guild.voiceConnection == undefined)
+			{
+				commands["summon"].process(bot, message, params);
+			}
+
+			if (message.guild.voiceConnection != undefined)
+			{
+				console.log(customAudios[customCommand.command][Math.floor(Math.random() * customAudios[customCommand.command].length)]);
+				message.guild.voiceConnection.playFile(customAudios[customCommand.command][Math.floor(Math.random() * customAudios[customCommand.command].length)]);
+			}
+		}
+	}
+});
 
 ///////////
 //  MAIN //
@@ -103,10 +141,3 @@ function exitHandler() {
 }
 process.on('exit', exitHandler);
 process.on('SIGINT', exitHandler);
-
-////////////////////
-//// TODO/FIXME ////
-////////////////////
-// * Iterate over Collections the right way.
-// * Validate config file.
-// * Catch errors

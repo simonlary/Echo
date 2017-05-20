@@ -13,6 +13,12 @@ Example:
 ```json
 {
 	"token": "YOUR-TOKEN-HERE",
+	"audioCommands": [
+		{
+			"command": "YOUR-COMMAND-NAME",
+			"folder": "YOUR-CONTAINING-FOLDER-PATH"
+		}
+	],
 	"link": "YOUR-INVITE-LINK"
 }
 ```

@@ -3,20 +3,6 @@ const path = require('path');
 const ytdl = require('ytdl-core');
 const https = require('https');
 
-const ReadFolder = function (folder) {
-	let elems = [];
-	let files = fs.readdirSync(folder);
-	files.forEach(function (file, index) {
-		let filePath = path.join(folder, file);
-		let stats = fs.statSync(filePath);
-		if (!stats.isDirectory())
-		{
-			elems.push(filePath);
-		}
-	});
-	return elems;
-};
-
 const PlayNext = function (voiceConnection) {
 	let guildId = voiceConnection.channel.guild.id;
 	if (queues[guildId] == undefined || queues[guildId].queue.length == 0)

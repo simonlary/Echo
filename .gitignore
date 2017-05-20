@@ -18,9 +18,7 @@ jsconfig.json
 # -------------[ NodeJS ]------------------------------ #
 node_modules
 npm-debug.log
-# -------------[ Output for downloaded files ]----------------------- #
-output
 # -------[Config file]-------- #
 bot.config
-
-ffmpeg.exe
+# -------[Testing custom commands]-------- #
+customCommands
