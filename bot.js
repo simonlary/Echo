@@ -58,6 +58,10 @@ const CheckMessageForCommand = function (message) {
 		{
 			message.reply("You don't have permission to use the '" + cmd + "' command. You need to have the '" + commands[cmd].permission + "' role.");
 		}
+		if (config.deleteCallingMessages == true)
+		{
+			message.delete();
+		}
 	}
 };
 
@@ -87,6 +91,7 @@ if (configFile.token == undefined)
 // Set default parameters if not present in config file
 const config = {
 	token: configFile.token,
+	deleteCallingMessages: configFile.deleteCallingMessages || false,
 	audioCommands: (Array.isArray(configFile.audioCommands)) ? configFile.audioCommands : [],
 };
 
