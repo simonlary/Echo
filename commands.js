@@ -278,7 +278,9 @@ exports.commands = {
 		usage: "link",
 		description: "Get the link to add the bot to your server",
 		process: function (bot, message, params, config) {
-			message.reply(config.link);
+			bot.generateInvite().then(link => {
+				message.reply('<' + link + '>');
+			})
 		}
 	},
 	"code": {

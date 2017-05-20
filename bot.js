@@ -71,7 +71,6 @@ if (configFile.token == undefined)
 // Set default parameters if not present in config file
 const config = {
 	token: configFile.token,
-	link: configFile.link || "https://discordapp.com/oauth2/authorize?client_id=284486730633969664&scope=bot"
 };
 console.log(config);
 
