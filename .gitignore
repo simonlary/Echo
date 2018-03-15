@@ -12,6 +12,7 @@ tmp
 *.sublime-workspace
 # -------------[ Build ]------------------------------- #
 build
+out
 # -------------[ VSCode generated ]-------------------- #
 jsconfig.json
 .vscode

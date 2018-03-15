@@ -1,21 +1,26 @@
 {
 	"name": "echo",
-	"version": "1.0.0",
-	"description": "",
-	"main": "bot.js",
-	"author": "",
+	"version": "2.0.0",
+	"main": "index.js",
 	"license": "MIT",
 	"dependencies": {
-		"discord.js": "^11.0.0",
+		"discord.js": "^11.3.2",
 		"ffmpeg-binaries": "^3.2.2-3",
-		"node-opus": "^0.2.4",
-		"ytdl-core": "^0.9.1"
+		"node-opus": "^0.2.7",
+		"ytdl-core": "^0.20.2"
 	},
 	"devDependencies": {
-		"nodemon": "^1.11.0"
+		"@types/node": "^9.4.7",
+		"tslint": "^5.9.1",
+		"typescript": "^2.7.2"
 	},
 	"scripts": {
-		"start": "node bot.js",
-		"test": "nodemon bot.js"
+		"lint": "tslint -c tslint.json -p tsconfig.json",
+		"build": "tsc",
+		"start": "npm run-script build && node ./out/index.js",
+		"deploy": "node ./out/index.js"
+	},
+	"engines": {
+		"node": ">=8.0.0"
 	}
 }

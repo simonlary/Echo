@@ -1,0 +1,21 @@
+{
+	"extends": [
+		"tslint:recommended"
+	],
+	"jsRules": {},
+	"rules": {
+		"indent": [
+			true,
+			"tabs"
+		],
+		"variable-name": [
+			true,
+			"ban-keywords",
+			"check-format",
+			"allow-leading-underscore"
+		],
+		"object-literal-sort-keys": false,
+		"no-console": false
+	},
+	"rulesDirectory": []
+}
