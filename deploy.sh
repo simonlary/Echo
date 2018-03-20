@@ -31,6 +31,6 @@ else
 	test
 	docker login --username="$DOCKER_USERNAME" --password="$DOCKER_PASSWORD"
 	docker build -t echo .
-	docker tag commando:latest armosgames/echo:"$DOCKER_RELEASE"
+	docker tag echo:latest armosgames/echo:"$DOCKER_RELEASE"
 	docker push armosgames/echo:"$DOCKER_RELEASE"
 fi
