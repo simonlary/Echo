@@ -47,45 +47,22 @@ export class Music {
 		}
 
 		let url = args[0];
-		if (args[0].match(/https:\/\/www.youtube.com\/watch\?v=/g) === null) {
-			// Search YouTube
+		if (args[0].match(/https:\/\/www.youtube.com\/watch\?v=/g) !== null) {
+			// Youtube url
+			const song = await this.queueSong(url, msg);
+			msg.channel.send(`**${song.title}** has beeen added to the queue!`);
+		} else if (args[0].match(/https:\/\/www.youtube.com\/playlist\?list=/g) !== null) {
+			// YouTube playlist
+			this.queuePlaylist(args[0], msg);
+		} else {
+			// YouTube search
 			const search = args.join(" ");
 			url = await this.searchYouTube(search);
-		}
-
-		const songInfo = await ytdl.getInfo(url);
-		const song: ISong = {
-			title: Util.escapeMarkdown(songInfo.title),
-			url: songInfo.video_url,
-		};
-		if (!serverQueue) {
-			const queueConstruct: IQueueElement = {
-				textChannel: msg.channel as TextChannel,
-				voiceChannel: voiceChannel as VoiceChannel,
-				connection: null,
-				songs: [],
-				volume: 0.5,
-				playing: true,
-			};
-			this._queue.set(msg.guild.id, queueConstruct);
-
-			queueConstruct.songs.push(song);
-
-			let connection;
-			try {
-				connection = await voiceChannel.join();
-				queueConstruct.connection = connection;
-				this.playNextSong(msg.guild, queueConstruct.songs[0]);
-			} catch (error) {
-				console.error(`Could not join voice channel : ${error}`);
-				this._queue.delete(msg.guild.id);
-				return msg.channel.send("I could not join the voice channel");
-			}
-		} else {
-			serverQueue.songs.push(song);
+			const song = await this.queueSong(url, msg);
 			msg.channel.send(`**${song.title}** has beeen added to the queue!`);
 		}
 	}
+
 	private stop = (msg: Message, args: string[]) => {
 		const serverQueue = this._queue.get(msg.guild.id);
 
@@ -179,6 +156,65 @@ export class Music {
 					const videoId = data.slice(position + 9, position + 20);
 					resolve(`https://www.youtube.com/watch?v=${videoId}`);
 				});
+			});
+		});
+	}
+
+	private async queueSong(url: string, message: Message): Promise<ISong> {
+		const serverQueue = this._queue.get(message.guild.id);
+		const songInfo = await ytdl.getInfo(url);
+		const song: ISong = {
+			title: Util.escapeMarkdown(songInfo.title),
+			url: songInfo.video_url,
+		};
+		if (!serverQueue) {
+			const queueConstruct: IQueueElement = {
+				textChannel: message.channel as TextChannel,
+				voiceChannel: message.member.voiceChannel,
+				connection: null,
+				songs: [],
+				volume: 0.5,
+				playing: true,
+			};
+			this._queue.set(message.guild.id, queueConstruct);
+
+			queueConstruct.songs.push(song);
+
+			let connection;
+			try {
+				connection = await message.member.voiceChannel.join();
+				queueConstruct.connection = connection;
+				this.playNextSong(message.guild, queueConstruct.songs[0]);
+			} catch (error) {
+				console.error(`Could not join voice channel : ${error}`);
+				this._queue.delete(message.guild.id);
+				message.channel.send("I could not join the voice channel");
+				return undefined;
+			}
+		} else {
+			serverQueue.songs.push(song);
+		}
+		return song;
+	}
+
+	private queuePlaylist(url: string, message: Message) {
+		https.get(url, (response) => {
+			response.setEncoding("utf8");
+			let data = "";
+			response.on("data", (chunk) => {
+				data += chunk;
+			}).on("end", async () => {
+				const regex = /spf-link \" dir=\"ltr\"/g;
+				let match = regex.exec(data);
+
+				const songs = [];
+				while (match != null) {
+					const s = await this.queueSong(`https://www.youtube.com${data.substr(match.index + 27, 20)}`, message);
+					songs.push(s);
+					match = regex.exec(data);
+				}
+
+				message.channel.send(`${songs.map((s) => s.title).join("\n")}\n added to the queue.`);
 			});
 		});
 	}
