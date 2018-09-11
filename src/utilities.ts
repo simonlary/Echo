@@ -8,9 +8,8 @@ export class Utilities {
 
 	constructor(config: Config, bot: Bot) {
 		this._bot = bot;
-		bot.registerCommand("link", this.link);
-		bot.registerCommand("code", this.code);
-		bot.registerCommand("help", this.help);
+		bot.registerCommand("link", this.link, "Get the link to add the bot to your server");
+		bot.registerCommand("code", this.code, "Format code");
 	}
 
 	private link = async (msg: Message, args: string[]) => {
@@ -24,20 +23,6 @@ export class Utilities {
 		code += args.join(" ") + "\n" + "```";
 
 		msg.channel.send(code);
-	}
-
-	private help(msg: Message, args: string[]) {
-		msg.channel.send("```code:            Format code\n"
-			+ "help:            Show available commands\n"
-			+ "link:            Get the link to add the bot to your server\n"
-			+ "np:              Get the name of the currently playing song\n"
-			+ "pause:           Pause the music's playback\n"
-			+ "play:            Adds a video/song to the queue\n"
-			+ "queue:           Get a list of the currently queued songs\n"
-			+ "resume:          Resume the music's playback if it was paused\n"
-			+ "skip:            Skip the currently playing song\n"
-			+ "stop:            Stops the music playback\n"
-			+ "volume:          Set the volume between 1-100```");
 	}
 
 }

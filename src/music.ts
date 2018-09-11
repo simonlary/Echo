@@ -24,14 +24,14 @@ export class Music {
 
 	constructor(config: Config, bot: Bot) {
 		this._config = config;
-		bot.registerCommand("play", this.play);
-		bot.registerCommand("stop", this.stop);
-		bot.registerCommand("skip", this.skip);
-		bot.registerCommand("np", this.np);
-		bot.registerCommand("queue", this.queue);
-		bot.registerCommand("volume", this.volume);
-		bot.registerCommand("pause", this.pause);
-		bot.registerCommand("resume", this.resume);
+		bot.registerCommand("play", this.play, "Adds a video/song to the queue");
+		bot.registerCommand("stop", this.stop, "Stops the music playback");
+		bot.registerCommand("skip", this.skip, "Skip the currently playing song");
+		bot.registerCommand("np", this.np, "Get the name of the currently playing song");
+		bot.registerCommand("queue", this.queue, "Get a list of the currently queued songs");
+		bot.registerCommand("volume", this.volume, "Set the volume between 1-100");
+		bot.registerCommand("pause", this.pause, "Pause the music's playback");
+		bot.registerCommand("resume", this.resume, "Resume the music's playback if it was paused");
 	}
 
 	private play = async (msg: Message, args: string[]) => {

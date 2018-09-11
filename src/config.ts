@@ -10,6 +10,7 @@ interface IConfigFile {
 interface IAudioCommand {
 	command: string;
 	folder: string;
+	help?: string;
 }
 
 export class Config {

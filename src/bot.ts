@@ -4,6 +4,11 @@ import { Config } from "./config";
 import { Music } from "./music";
 import { Utilities } from "./utilities";
 
+interface ICommand {
+	action: (msg: Message, args: string[]) => void;
+	help: string;
+}
+
 export class Bot {
 	public client: Client;
 
@@ -11,7 +16,7 @@ export class Bot {
 	private _music: Music;
 	private _audioCommands: AudioCommands;
 	private _utilities: Utilities;
-	private _commands: Map<string, (msg: Message, args: string[]) => void> = new Map();
+	private _commands: Map<string, ICommand> = new Map();
 
 	constructor(config: Config) {
 		this._config = config;
@@ -19,6 +24,8 @@ export class Bot {
 		this._music = new Music(config, this);
 		this._audioCommands = new AudioCommands(config, this);
 		this._utilities = new Utilities(config, this);
+
+		this.registerCommand("help", this.help, "Show available commands");
 
 		this.client.on("warn", console.warn);
 		this.client.on("error", console.error);
@@ -30,8 +37,8 @@ export class Bot {
 		this.client.login(this._config.TOKEN);
 	}
 
-	public registerCommand(name: string, action: (msg: Message, args: string[]) => void) {
-		this._commands.set(name, action);
+	public registerCommand(name: string, action: (msg: Message, args: string[]) => void, help: string) {
+		this._commands.set(name, { action, help });
 	}
 
 	private onmessage = async (msg: Message) => {
@@ -44,9 +51,18 @@ export class Bot {
 			return msg.reply("You can't send commands by direct message. Use a channel on a server.");
 		}
 		if (this._commands.get(cmd) !== undefined) {
-			this._commands.get(cmd)(msg, args);
+			this._commands.get(cmd).action(msg, args);
 			if (this._config.DELETE_CALLING_MESSAGES) { msg.delete(); }
 		}
+	}
+
+	private help = (msg: Message, args: string[]) => {
+		let output = "```";
+		this._commands.forEach((command, name) => {
+			output += name + ":" + " ".repeat(20 - name.length) + command.help + "\n";
+		});
+		output += "```";
+		msg.channel.send(output);
 	}
 
 }

@@ -42,7 +42,7 @@ export class AudioCommands {
 					console.error(`Could not join voice channel : ${error}`);
 					return msg.channel.send("I could not join the voice channel");
 				}
-			});
+			}, customCommand.help || "A custom audio command.");
 		});
 	}
 
