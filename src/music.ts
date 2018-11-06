@@ -6,8 +6,6 @@ import { Config } from "./config";
 
 interface IQueueElement {
 	textChannel: TextChannel;
-	voiceChannel: VoiceChannel;
-	connection: VoiceConnection;
 	songs: ISong[];
 	volume: number;
 	playing: boolean;
@@ -35,7 +33,6 @@ export class Music {
 	}
 
 	private play = async (msg: Message, args: string[]) => {
-		const serverQueue = this._queue.get(msg.guild.id);
 		const voiceChannel = msg.member.voiceChannel;
 		if (!voiceChannel) { return msg.channel.send("You need to be in a voice channel to play music!"); }
 		const permissions = voiceChannel.permissionsFor(msg.client.user);
@@ -70,14 +67,14 @@ export class Music {
 		if (!serverQueue) { return msg.channel.send("There is nothing playing that I could stop for you."); }
 
 		serverQueue.songs = [];
-		serverQueue.connection.dispatcher.end();
+		msg.guild.me.voiceChannel.connection.dispatcher.end();
 	}
 	private skip = (msg: Message, args: string[]) => {
 		const serverQueue = this._queue.get(msg.guild.id);
 
 		if (!msg.member.voiceChannel) { return msg.channel.send("You're not in a voice channel!"); }
 		if (!serverQueue) { return msg.channel.send("There is nothing playing that I could skip for you."); }
-		serverQueue.connection.dispatcher.end();
+		msg.guild.me.voiceChannel.connection.dispatcher.end();
 	}
 	private np = (msg: Message, args: string[]) => {
 		const serverQueue = this._queue.get(msg.guild.id);
@@ -103,21 +100,21 @@ export class Music {
 
 		serverQueue.volume = Math.abs(Number.parseInt(args[0])) / 100;
 		serverQueue.volume = (serverQueue.volume > 1) ? 1 : serverQueue.volume;
-		serverQueue.connection.dispatcher.setVolumeLogarithmic(serverQueue.volume);
+		msg.guild.me.voiceChannel.connection.dispatcher.setVolumeLogarithmic(serverQueue.volume);
 		msg.channel.send(`The new volume is **${serverQueue.volume * 100}**`);
 	}
 	private pause = (msg: Message, args: string[]) => {
 		const serverQueue = this._queue.get(msg.guild.id);
 		if (!serverQueue || !serverQueue.playing) { return msg.channel.send("There is nothing playing right now."); }
 		serverQueue.playing = false;
-		serverQueue.connection.dispatcher.pause();
+		msg.guild.me.voiceChannel.connection.dispatcher.pause();
 		msg.channel.send("Paused the music!");
 	}
 	private resume = (msg: Message, args: string[]) => {
 		const serverQueue = this._queue.get(msg.guild.id);
 		if (!serverQueue || serverQueue.playing) { return msg.channel.send("There is nothing paused right now."); }
 		serverQueue.playing = true;
-		serverQueue.connection.dispatcher.resume();
+		msg.guild.me.voiceChannel.connection.dispatcher.resume();
 		msg.channel.send("Resumed the music!");
 	}
 
@@ -125,12 +122,12 @@ export class Music {
 		const serverQueue = this._queue.get(guild.id);
 
 		if (!song) {
-			serverQueue.voiceChannel.leave();
+			guild.me.voiceChannel.leave();
 			this._queue.delete(guild.id);
 			return;
 		}
 
-		const dispatcher = serverQueue.connection.playStream(ytdl(song.url))
+		const dispatcher = guild.me.voiceChannel.connection.playStream(ytdl(song.url))
 			.on("end", () => {
 				serverQueue.songs.shift();
 				this.playNextSong(guild, serverQueue.songs[0]);
@@ -170,8 +167,6 @@ export class Music {
 		if (!serverQueue) {
 			const queueConstruct: IQueueElement = {
 				textChannel: message.channel as TextChannel,
-				voiceChannel: message.member.voiceChannel,
-				connection: null,
 				songs: [],
 				volume: 0.5,
 				playing: true,
@@ -180,10 +175,8 @@ export class Music {
 
 			queueConstruct.songs.push(song);
 
-			let connection;
 			try {
-				connection = await message.member.voiceChannel.join();
-				queueConstruct.connection = connection;
+				await message.member.voiceChannel.join();
 				this.playNextSong(message.guild, queueConstruct.songs[0]);
 			} catch (error) {
 				console.error(`Could not join voice channel : ${error}`);

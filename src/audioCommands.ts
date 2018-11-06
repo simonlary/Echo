@@ -29,11 +29,11 @@ export class AudioCommands {
 				}
 
 				try {
-					const connection = await voiceChannel.join();
+					await voiceChannel.join();
 					const cmd = this._audios.get(customCommand.command);
 					msg.guild.voiceConnection.playFile(cmd[Math.floor(Math.random() * cmd.length)])
 						.on("end", () => {
-							voiceChannel.leave();
+							msg.guild.me.voiceChannel.leave();
 						})
 						.on("error", (error) => {
 							console.error(`Error playing music : ${error}`);
