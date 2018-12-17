@@ -3,7 +3,7 @@
 set -e
 
 function test {
-	npm lint
+	npm run lint
 }
 
 if [[ "$TRAVIS_BRANCH" == revert-* ]]; then
