@@ -68,14 +68,14 @@ export class Music {
 		if (!serverQueue) { return msg.channel.send("There is nothing playing that I could stop for you."); }
 
 		serverQueue.songs = [];
-		msg.guild.me.voice.channel.connection.dispatcher.end();
+		msg.guild.me.voice.connection.dispatcher.end();
 	}
 	private skip = (msg: Message, args: string[]) => {
 		const serverQueue = this._queue.get(msg.guild.id);
 
 		if (!msg.member.voice.channel) { return msg.channel.send("You're not in a voice channel!"); }
 		if (!serverQueue) { return msg.channel.send("There is nothing playing that I could skip for you."); }
-		msg.guild.me.voice.channel.connection.dispatcher.end();
+		msg.guild.me.voice.connection.dispatcher.end();
 	}
 	private np = (msg: Message, args: string[]) => {
 		const serverQueue = this._queue.get(msg.guild.id);
@@ -101,21 +101,21 @@ export class Music {
 
 		serverQueue.volume = Math.abs(Number.parseInt(args[0], 10)) / 100;
 		serverQueue.volume = (serverQueue.volume > 1) ? 1 : serverQueue.volume;
-		msg.guild.me.voice.channel.connection.dispatcher.setVolumeLogarithmic(serverQueue.volume);
+		msg.guild.me.voice.connection.dispatcher.setVolumeLogarithmic(serverQueue.volume);
 		msg.channel.send(`The new volume is **${serverQueue.volume * 100}**`);
 	}
 	private pause = (msg: Message, args: string[]) => {
 		const serverQueue = this._queue.get(msg.guild.id);
 		if (!serverQueue || !serverQueue.playing) { return msg.channel.send("There is nothing playing right now."); }
 		serverQueue.playing = false;
-		msg.guild.me.voice.channel.connection.dispatcher.pause();
+		msg.guild.me.voice.connection.dispatcher.pause();
 		msg.channel.send("Paused the music!");
 	}
 	private resume = (msg: Message, args: string[]) => {
 		const serverQueue = this._queue.get(msg.guild.id);
 		if (!serverQueue || serverQueue.playing) { return msg.channel.send("There is nothing paused right now."); }
 		serverQueue.playing = true;
-		msg.guild.me.voice.channel.connection.dispatcher.resume();
+		msg.guild.me.voice.connection.dispatcher.resume();
 		msg.channel.send("Resumed the music!");
 	}
 
