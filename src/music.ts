@@ -33,7 +33,7 @@ export class Music {
 	}
 
 	private play = async (msg: Message, args: string[]) => {
-		if (args.length == 0) { return msg.channel.send("You need to pass a song name or YouTube url to play!"); }
+		if (args.length === 0) { return msg.channel.send("You need to pass a song name or YouTube url to play!"); }
 		const voiceChannel = msg.member.voice.channel;
 		if (!voiceChannel) { return msg.channel.send("You need to be in a voice channel to play music!"); }
 		const permissions = voiceChannel.permissionsFor(msg.client.user);
@@ -99,7 +99,7 @@ export class Music {
 
 		if (!args[0]) { return msg.channel.send(`The current volume is **${serverQueue.volume * 100}**`); }
 
-		serverQueue.volume = Math.abs(Number.parseInt(args[0])) / 100;
+		serverQueue.volume = Math.abs(Number.parseInt(args[0], 10)) / 100;
 		serverQueue.volume = (serverQueue.volume > 1) ? 1 : serverQueue.volume;
 		msg.guild.me.voice.channel.connection.dispatcher.setVolumeLogarithmic(serverQueue.volume);
 		msg.channel.send(`The new volume is **${serverQueue.volume * 100}**`);
