@@ -33,7 +33,7 @@ export class Utilities {
 		if (!msg.guild.me.hasPermission("MOVE_MEMBERS")) {
 			return msg.channel.send(`Sorry, I do not have the *MOVE_MEMBERS* permission. :cry:`);
 		}
-		if (msg.member.voiceChannel == null) {
+		if (msg.member.voice.channel == null) {
 			return msg.channel.send(`You need to be in a voice channel to do that!`);
 		}
 
@@ -44,8 +44,8 @@ export class Utilities {
 		}
 
 		// Move everyone
-		msg.member.voiceChannel.members.forEach((member) => {
-			member.setVoiceChannel(destination);
+		msg.member.voice.channel.members.forEach((member) => {
+			member.voice.setChannel(destination);
 		});
 	}
 

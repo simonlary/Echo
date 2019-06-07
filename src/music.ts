@@ -1,4 +1,4 @@
-import { Guild, Message, TextChannel, Util, VoiceChannel, VoiceConnection } from "discord.js";
+import { Guild, Message, TextChannel, Util } from "discord.js";
 import * as https from "https";
 import * as ytdl from "ytdl-core";
 import { Bot } from "./bot";
@@ -33,7 +33,8 @@ export class Music {
 	}
 
 	private play = async (msg: Message, args: string[]) => {
-		const voiceChannel = msg.member.voiceChannel;
+		if (args.length == 0) { return msg.channel.send("You need to pass a song name or YouTube url to play!"); }
+		const voiceChannel = msg.member.voice.channel;
 		if (!voiceChannel) { return msg.channel.send("You need to be in a voice channel to play music!"); }
 		const permissions = voiceChannel.permissionsFor(msg.client.user);
 		if (!permissions.has("CONNECT")) {
@@ -63,18 +64,18 @@ export class Music {
 	private stop = (msg: Message, args: string[]) => {
 		const serverQueue = this._queue.get(msg.guild.id);
 
-		if (!msg.member.voiceChannel) { return msg.channel.send("You're not in a voice channel!"); }
+		if (!msg.member.voice.channel) { return msg.channel.send("You're not in a voice channel!"); }
 		if (!serverQueue) { return msg.channel.send("There is nothing playing that I could stop for you."); }
 
 		serverQueue.songs = [];
-		msg.guild.me.voiceChannel.connection.dispatcher.end();
+		msg.guild.me.voice.channel.connection.dispatcher.end();
 	}
 	private skip = (msg: Message, args: string[]) => {
 		const serverQueue = this._queue.get(msg.guild.id);
 
-		if (!msg.member.voiceChannel) { return msg.channel.send("You're not in a voice channel!"); }
+		if (!msg.member.voice.channel) { return msg.channel.send("You're not in a voice channel!"); }
 		if (!serverQueue) { return msg.channel.send("There is nothing playing that I could skip for you."); }
-		msg.guild.me.voiceChannel.connection.dispatcher.end();
+		msg.guild.me.voice.channel.connection.dispatcher.end();
 	}
 	private np = (msg: Message, args: string[]) => {
 		const serverQueue = this._queue.get(msg.guild.id);
@@ -93,28 +94,28 @@ export class Music {
 	private volume = (msg: Message, args: string[]) => {
 		const serverQueue = this._queue.get(msg.guild.id);
 
-		if (!msg.member.voiceChannel) { return msg.channel.send("You're not in a voice channel!"); }
+		if (!msg.member.voice.channel) { return msg.channel.send("You're not in a voice channel!"); }
 		if (!serverQueue) { return msg.channel.send("There is nothing playing right now."); }
 
 		if (!args[0]) { return msg.channel.send(`The current volume is **${serverQueue.volume * 100}**`); }
 
 		serverQueue.volume = Math.abs(Number.parseInt(args[0])) / 100;
 		serverQueue.volume = (serverQueue.volume > 1) ? 1 : serverQueue.volume;
-		msg.guild.me.voiceChannel.connection.dispatcher.setVolumeLogarithmic(serverQueue.volume);
+		msg.guild.me.voice.channel.connection.dispatcher.setVolumeLogarithmic(serverQueue.volume);
 		msg.channel.send(`The new volume is **${serverQueue.volume * 100}**`);
 	}
 	private pause = (msg: Message, args: string[]) => {
 		const serverQueue = this._queue.get(msg.guild.id);
 		if (!serverQueue || !serverQueue.playing) { return msg.channel.send("There is nothing playing right now."); }
 		serverQueue.playing = false;
-		msg.guild.me.voiceChannel.connection.dispatcher.pause();
+		msg.guild.me.voice.channel.connection.dispatcher.pause();
 		msg.channel.send("Paused the music!");
 	}
 	private resume = (msg: Message, args: string[]) => {
 		const serverQueue = this._queue.get(msg.guild.id);
 		if (!serverQueue || serverQueue.playing) { return msg.channel.send("There is nothing paused right now."); }
 		serverQueue.playing = true;
-		msg.guild.me.voiceChannel.connection.dispatcher.resume();
+		msg.guild.me.voice.channel.connection.dispatcher.resume();
 		msg.channel.send("Resumed the music!");
 	}
 
@@ -122,12 +123,12 @@ export class Music {
 		const serverQueue = this._queue.get(guild.id);
 
 		if (!song) {
-			guild.me.voiceChannel.leave();
+			guild.me.voice.channel.leave();
 			this._queue.delete(guild.id);
 			return;
 		}
 
-		const dispatcher = guild.me.voiceChannel.connection.playStream(ytdl(song.url))
+		const dispatcher = guild.me.voice.connection.play(ytdl(song.url))
 			.on("end", () => {
 				serverQueue.songs.shift();
 				this.playNextSong(guild, serverQueue.songs[0]);
@@ -176,7 +177,7 @@ export class Music {
 			queueConstruct.songs.push(song);
 
 			try {
-				await message.member.voiceChannel.join();
+				await message.member.voice.channel.join();
 				this.playNextSong(message.guild, queueConstruct.songs[0]);
 			} catch (error) {
 				console.error(`Could not join voice channel : ${error}`);
