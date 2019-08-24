@@ -51,7 +51,11 @@ export class Bot {
 			return msg.reply("You can't send commands by direct message. Use a channel on a server.");
 		}
 		if (this._commands.get(cmd) !== undefined) {
-			this._commands.get(cmd).action(msg, args);
+			try {
+				this._commands.get(cmd).action(msg, args);
+			} catch (exception) {
+				console.error(`Missing permission to executing command : '${msg.content}'`)
+			}
 			if (this._config.DELETE_CALLING_MESSAGES) { msg.delete(); }
 		}
 	}
