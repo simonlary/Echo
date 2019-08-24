@@ -27,24 +27,24 @@ export class Utilities {
 	}
 
 	private moveTo(msg: Message, args: string[]) {
-		if (!msg.member.hasPermission("MOVE_MEMBERS")) {
+		if (msg.member != null && !msg.member.hasPermission("MOVE_MEMBERS")) {
 			return msg.channel.send(`You do not have the *MOVE_MEMBERS* permission.`);
 		}
-		if (!msg.guild.me.hasPermission("MOVE_MEMBERS")) {
+		if (msg.guild != null && msg.guild.me != null && !msg.guild.me.hasPermission("MOVE_MEMBERS")) {
 			return msg.channel.send(`Sorry, I do not have the *MOVE_MEMBERS* permission. :cry:`);
 		}
-		if (msg.member.voice.channel == null) {
+		if (msg.member != null && msg.member.voice.channel == null) {
 			return msg.channel.send(`You need to be in a voice channel to do that!`);
 		}
 
 		// Find destination voice channel
-		const destination = msg.guild.channels.find((channel) => channel.type === "voice" && channel.name === args.join(" "));
+		const destination = msg.guild!.channels.find((channel) => channel.type === "voice" && channel.name === args.join(" "));
 		if (destination == null) {
 			return msg.channel.send(`The ${args.join(" ")} voice channel does not exist on this server.`);
 		}
 
 		// Move everyone
-		msg.member.voice.channel.members.forEach((member) => {
+		msg.member!.voice.channel!.members.forEach((member) => {
 			member.voice.setChannel(destination);
 		});
 	}
