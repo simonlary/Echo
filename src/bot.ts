@@ -12,6 +12,8 @@ interface ICommand {
 export class Bot {
 	public client: Client;
 
+	private readonly MAX_MESSAGE_LENGTH = 2000;
+
 	private _config: Config;
 	private _music: Music;
 	private _audioCommands: AudioCommands;
@@ -61,11 +63,18 @@ export class Bot {
 	}
 
 	private help = (msg: Message, args: string[]) => {
-		let output = "```";
+		const output = ["```"];
+		let i = 0;
 		this._commands.forEach((command, name) => {
-			output += name + ":" + " ".repeat(20 - name.length) + command.help + "\n";
+			const line = this._config.PREFIX + name + ":" + " ".repeat(20 - name.length) + command.help + "\n";
+			if(output.length + line.length > this.MAX_MESSAGE_LENGTH) {
+				output[i] += "```";
+				i++;
+				output[i] = "```";
+			}
+			output[i] += line;
 		});
-		output += "```";
+		output[i] += "```";
 		msg.channel.send(output);
 	}
 
