@@ -1,4 +1,4 @@
-import { Message, Permissions } from "discord.js";
+import { Message, Permissions, MessageEmbed } from "discord.js";
 import { Bot } from "./bot";
 import { Config } from "./config";
 
@@ -11,6 +11,7 @@ export class Utilities {
 		bot.registerCommand("link", this.link, "Get the link to add the bot to your server");
 		bot.registerCommand("code", this.code, "Format code");
 		bot.registerCommand("moveTo", this.moveTo, "Move all the people in your voice channel to another voice channel");
+		bot.registerCommand("screenshare", this.screenshare, "Show the link to screenshare in your current voice channel");
 	}
 
 	private link = async (msg: Message, args: string[]) => {
@@ -49,4 +50,15 @@ export class Utilities {
 		});
 	}
 
+	private screenshare(msg: Message, args: string[]) {
+		if (msg.guild == null || msg.member == null || msg.member.voice == null || msg.member.voice.channel == null) {
+			return msg.channel.send(`Error creating the sharing link.`);
+		}
+
+		const embed = new MessageEmbed()
+			.setDescription(`[**Screenshare URL** : ${msg.member.voice.channel.name}](https://discordapp.com/channels/${msg.guild.id}/${msg.member.voice.channel.id})`)
+			.setColor(0x0CA8EE);
+
+		msg.channel.send(embed);
+	}
 }
