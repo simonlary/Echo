@@ -1,7 +1,0 @@
-# Example of a local docker-compose
-version: '3'
-services:
-  echo:
-    build: .
-    volumes:
-      - ./bot.config:/app/bot.config
