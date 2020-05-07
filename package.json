@@ -10,15 +10,14 @@
 		"deploy": "node ./out/index.js"
 	},
 	"dependencies": {
-		"discord.js": "github:discordjs/discord.js",
-		"ffmpeg-static": "^2.4.0",
-		"node-opus": "^0.3.2",
-		"ytdl-core": "github:fent/node-ytdl-core"
+		"discord.js": "^12.2.0",
+		"ffmpeg-static": "^4.2.1",
+		"ytdl-core": "^2.1.1"
 	},
 	"devDependencies": {
-		"@types/node": "^12.0.5",
-		"@types/ws": "^6.0.1",
-		"tslint": "^5.17.0",
-		"typescript": "^3.5.1"
+		"@types/node": "^13.13.5",
+		"@types/ws": "^7.2.4",
+		"tslint": "^6.1.2",
+		"typescript": "^3.8.3"
 	}
 }
