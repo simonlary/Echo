@@ -32,7 +32,7 @@ export class AudioCommands {
 					await voiceChannel.join();
 					const cmd = this._audios.get(customCommand.command)!;
 					msg.guild!.voice!.connection!.play(cmd[Math.floor(Math.random() * cmd.length)])
-						.on("end", () => {
+						.on("finish", () => {
 							msg.guild!.me!.voice.channel!.leave();
 						})
 						.on("error", (error) => {

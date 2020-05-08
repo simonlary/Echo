@@ -10,14 +10,12 @@
 		"deploy": "node ./out/index.js"
 	},
 	"dependencies": {
-		"@discordjs/opus": "^0.3.2",
 		"discord.js": "^12.2.0",
-		"ffmpeg-static": "^4.2.1",
-		"ytdl-core": "^2.1.1"
+		"@discordjs/opus": "^0.3.2",
+		"ytdl-core-discord": "^1.2.0"
 	},
 	"devDependencies": {
 		"@types/node": "^13.13.5",
-		"@types/ws": "^7.2.4",
 		"tslint": "^6.1.2",
 		"typescript": "^3.8.3"
 	}

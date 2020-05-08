@@ -1,6 +1,6 @@
 import { Guild, Message, TextChannel, Util } from "discord.js";
 import * as https from "https";
-import * as ytdl from "ytdl-core";
+import * as ytdl from "ytdl-core-discord";
 import { Bot } from "./bot";
 import { Config } from "./config";
 
@@ -120,7 +120,7 @@ export class Music {
 		msg.channel.send("Resumed the music!");
 	}
 
-	private playNextSong(guild: Guild, song: ISong) {
+	private async playNextSong(guild: Guild, song: ISong) {
 		const serverQueue = this._queue.get(guild.id)!;
 
 		if (guild.me != null && guild.me.voice.channel != null && !song) {
@@ -129,7 +129,7 @@ export class Music {
 			return;
 		}
 
-		const dispatcher = guild.me!.voice.connection!.play(ytdl(song.url))
+		const dispatcher = guild.me!.voice.connection!.play(await ytdl(song.url), { type: "opus" })
 			.on("finish", () => {
 				serverQueue.songs.shift();
 				this.playNextSong(guild, serverQueue.songs[0]);
