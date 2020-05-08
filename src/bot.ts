@@ -32,7 +32,6 @@ export class Bot {
 		this.client.on("error", console.error);
 		this.client.on("ready", () => { console.log("Ready!"); });
 		this.client.on("disconnect", () => { console.log("Disconnected"); });
-		this.client.on("reconnecting", () => { console.log("Reconnecting"); });
 		this.client.on("message", this.onmessage);
 
 		this.client.login(this._config.TOKEN);
@@ -47,7 +46,8 @@ export class Bot {
 	}
 
 	public registerHelp(name: string, help: string) {
-		this._help.set(name, help);
+		if (name != null && name != "" && help != null && help != "")
+			this._help.set(name, help);
 	}
 
 	private onmessage = async (msg: Message) => {
@@ -60,11 +60,11 @@ export class Bot {
 			return msg.reply("You can't send commands by direct message. Use a channel on a server.");
 		}
 		if (this._commands.get(cmd) !== undefined) {
-			try {
+			// try {
 				this._commands.get(cmd)!(msg, args);
-			} catch (exception) {
-				console.error(`Missing permission to executing command : '${msg.content}'`)
-			}
+			// } catch (exception) {
+			// 	console.error(`Error executing command '${msg.content}' : ${exception.message}`)
+			// }
 			if (this._config.DELETE_CALLING_MESSAGES) { msg.delete(); }
 		}
 	}

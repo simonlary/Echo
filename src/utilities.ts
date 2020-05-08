@@ -39,7 +39,7 @@ export class Utilities {
 		}
 
 		// Find destination voice channel
-		const destination = msg.guild!.channels.find((channel) => channel.type === "voice" && channel.name === args.join(" "));
+		const destination = msg.guild!.channels.cache.find((channel) => channel.type === "voice" && channel.name === args.join(" "));
 		if (destination == null) {
 			return msg.channel.send(`The ${args.join(" ")} voice channel does not exist on this server.`);
 		}

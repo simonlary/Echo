@@ -44,7 +44,8 @@ export class AudioCommands {
 				}
 			});
 		});
-		bot.registerHelp("Custom audio commands available :", config.AUDIO_COMMANDS.map(x => x.command).join(", "));
+		if(config.AUDIO_COMMANDS.length > 0)
+			bot.registerHelp("Custom audio commands available :", config.AUDIO_COMMANDS.map(x => x.command).join(", "));
 	}
 
 	private ReadFolder(folder: string) {

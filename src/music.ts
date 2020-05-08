@@ -75,6 +75,7 @@ export class Music {
 
 		if (!msg.member!.voice.channel) { return msg.channel.send("You're not in a voice channel!"); }
 		if (!serverQueue) { return msg.channel.send("There is nothing playing that I could skip for you."); }
+		
 		msg.guild!.me!.voice.connection!.dispatcher.end();
 	}
 	private np = (msg: Message, args: string[]) => {
@@ -129,7 +130,7 @@ export class Music {
 		}
 
 		const dispatcher = guild.me!.voice.connection!.play(ytdl(song.url))
-			.on("end", () => {
+			.on("finish", () => {
 				serverQueue.songs.shift();
 				this.playNextSong(guild, serverQueue.songs[0]);
 			})
