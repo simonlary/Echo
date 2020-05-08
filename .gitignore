@@ -22,6 +22,6 @@ npm-debug.log
 # -------[Config file]-------- #
 bot.config
 # -------[Testing custom commands]-------- #
-customCommands
+audioCommands
 
 nodemon.json
