@@ -1,11 +1,11 @@
 {
 	"compilerOptions": {
-		"target": "es6",
+		"target": "es2020",
 		"module": "commonjs",
-		"noImplicitAny": true,
-		"strictNullChecks": true,
-		"sourceMap": true,
 		"outDir": "out",
+		"strict": true,
+		"skipLibCheck": true,
+		"esModuleInterop": true,
 		"baseUrl": ".",
 		"paths": {
 			"*": [

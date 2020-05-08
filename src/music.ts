@@ -1,6 +1,6 @@
 import { Guild, Message, TextChannel, Util } from "discord.js";
 import * as https from "https";
-import * as ytdl from "ytdl-core-discord";
+import ytdl from "ytdl-core-discord";
 import { Bot } from "./bot";
 import { Config } from "./config";
 
