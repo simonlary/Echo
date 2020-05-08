@@ -15,26 +15,16 @@ A configuration file named `bot.config` is required to setup the bot. You need t
 	"token": "YOUR-TOKEN-HERE",
 	"prefix" : "YOUR-PREFIX-HERE",
 	"deleteCallingMessages" : true,
-	"audioCommands": [
-		{
-			"command": "YOUR-COMMAND-NAME",
-			"folder": "YOUR-CONTAINING-FOLDER-PATH"
-		}
-	]
+	"audioCommandsFolder": "YOUR-CONTAINING-FOLDER-PATH"
 }
 ```
 
 ## External audio commands
-Echo allows you to play audio files directly from the server. To do so, you need to add the audio files in a folder and the path to this folder in your config file. You also need to tell the bot the name of the custom command. Each time you call the command, the bot will play one of the file randomly.
+Echo allows you to play audio files directly from the server. To do so, you need to add the audio files in a folder and the path to this folder in your config file. Every file in this folder will be able to be played by typing the name of the file (without the extension) with the prefix as a command.
 
 Example:
 ```json
 {
-	"audioCommands": [
-		{
-			"command": "rock",
-			"folder": "music/myAwesomeRockPlaylist"
-		}
-	]
+	"audioCommandsFolder": "myFolderFullOfFunnySounds"
 }
 ```
