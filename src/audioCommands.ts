@@ -25,7 +25,7 @@ export class AudioCommands {
 	}
 
 	private async ExecuteAudioCommand(msg: Message, file: string) {
-		if (msg.guild != null && this.blacklistedGuilds.includes(msg.guild.id)) return;
+		if (msg.guild != null && this.blacklistedGuilds.includes(msg.guild.id)) return msg.channel.send("No audio commands");
 		const voiceChannel = msg.member!.voice.channel;
 		if (!voiceChannel) { return msg.channel.send("You need to be in a voice channel to play audios!"); }
 		const permissions = voiceChannel.permissionsFor(msg.client.user!);
