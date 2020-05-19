@@ -16,7 +16,7 @@ export class Bot {
 	private _audioCommands: AudioCommands;
 	private _utilities: Utilities;
 	private _commands: Map<string, Command> = new Map();
-	private _help : Map<string, string> = new Map();
+	private _help: Map<string, string> = new Map();
 
 	constructor(config: Config) {
 		this._config = config;
@@ -40,7 +40,7 @@ export class Bot {
 	public registerCommand(name: string, command: Command, help?: string) {
 		this._commands.set(name, command);
 
-		if(help != null) {
+		if (help != null) {
 			this._help.set(name, help);
 		}
 	}
@@ -60,11 +60,7 @@ export class Bot {
 			return msg.reply("You can't send commands by direct message. Use a channel on a server.");
 		}
 		if (this._commands.get(cmd) !== undefined) {
-			// try {
-				this._commands.get(cmd)!(msg, args);
-			// } catch (exception) {
-			// 	console.error(`Error executing command '${msg.content}' : ${exception.message}`)
-			// }
+			this._commands.get(cmd)!(msg, args);
 			if (this._config.DELETE_CALLING_MESSAGES) { msg.delete(); }
 		}
 	}
@@ -75,6 +71,9 @@ export class Bot {
 			.setColor(0xA10025);
 
 		for (const [name, help] of this._help) {
+			if (name == "Custom audio commands available :" && msg.guild != null && this._config.NO_AUDIO_COMMAND_GUILDS.includes(msg.guild.id)) {
+				continue;
+			}
 			embed.addField(name, help);
 		}
 

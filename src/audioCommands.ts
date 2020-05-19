@@ -7,6 +7,7 @@ import { Config } from "./config";
 export class AudioCommands {
 
 	private readonly SUPPORTED_EXTENSIONS = [".wav", ".mp3"];
+	private blacklistedGuilds: string[] = [];
 
 	constructor(config: Config, bot: Bot) {
 		if (config.AUDIO_COMMANDS_FOLDER === "")
@@ -14,6 +15,7 @@ export class AudioCommands {
 
 		const files = fs.readdirSync(config.AUDIO_COMMANDS_FOLDER);
 		const validFiles = files.map(f => path.parse(f)).filter(f => this.SUPPORTED_EXTENSIONS.includes(f.ext));
+		this.blacklistedGuilds = config.NO_AUDIO_COMMAND_GUILDS;
 
 		if (validFiles.length === 0)
 			return;
@@ -23,6 +25,7 @@ export class AudioCommands {
 	}
 
 	private async ExecuteAudioCommand(msg: Message, file: string) {
+		if (msg.guild != null && this.blacklistedGuilds.includes(msg.guild.id)) return;
 		const voiceChannel = msg.member!.voice.channel;
 		if (!voiceChannel) { return msg.channel.send("You need to be in a voice channel to play audios!"); }
 		const permissions = voiceChannel.permissionsFor(msg.client.user!);

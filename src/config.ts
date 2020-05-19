@@ -5,6 +5,7 @@ interface IConfigFile {
 	deleteCallingMessages: boolean;
 	audioCommandsFolder: string;
 	prefix: string;
+	noAudioCommandGuilds: string
 }
 
 interface IAudioCommand {
@@ -19,6 +20,7 @@ export class Config {
 	private _deleteCallingMessages: boolean;
 	private _prefix: string;
 	private _token: string;
+	private _noAudioCommandGuilds: string[];
 
 	constructor() {
 		if (fs.existsSync("bot.config") === false) {
@@ -30,6 +32,7 @@ export class Config {
 		this._deleteCallingMessages = configFile.deleteCallingMessages || false;
 		this._prefix = configFile.prefix || "";
 		this._token = configFile.token;
+		this._noAudioCommandGuilds = (configFile.noAudioCommandGuilds != null) ? configFile.noAudioCommandGuilds.split(",") : [];
 	}
 
 	public get AUDIO_COMMANDS_FOLDER(): string {
@@ -46,6 +49,10 @@ export class Config {
 
 	public get TOKEN(): string {
 		return this._token;
+	}
+
+	public get NO_AUDIO_COMMAND_GUILDS(): string[] {
+		return this._noAudioCommandGuilds;
 	}
 
 }
