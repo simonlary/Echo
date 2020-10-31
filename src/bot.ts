@@ -2,6 +2,7 @@ import { Client, Message, Util, MessageEmbed } from "discord.js";
 import { AudioCommands } from "./audioCommands";
 import { Config } from "./config";
 import { Music } from "./music";
+import { TTS } from "./tts";
 import { Utilities } from "./utilities";
 
 type Command = (msg: Message, args: string[]) => void;
@@ -15,6 +16,7 @@ export class Bot {
 	private _music: Music;
 	private _audioCommands: AudioCommands;
 	private _utilities: Utilities;
+	private _tts: TTS;
 	private _commands: Map<string, Command> = new Map();
 	private _help: Map<string, string> = new Map();
 
@@ -27,6 +29,7 @@ export class Bot {
 		this._music = new Music(config, this);
 		this._utilities = new Utilities(config, this);
 		this._audioCommands = new AudioCommands(config, this);
+		this._tts = new TTS(config, this);
 
 		this.client.on("warn", console.warn);
 		this.client.on("error", console.error);
