@@ -75,7 +75,7 @@ export class Music {
 
 		if (!msg.member!.voice.channel) { return msg.channel.send("You're not in a voice channel!"); }
 		if (!serverQueue) { return msg.channel.send("There is nothing playing that I could skip for you."); }
-		
+
 		msg.guild!.me!.voice.connection!.dispatcher.end();
 	}
 	private np = (msg: Message, args: string[]) => {
@@ -129,17 +129,24 @@ export class Music {
 			return;
 		}
 
-		const dispatcher = guild.me!.voice.connection!.play(await ytdl(song.url), { type: "opus" })
-			.on("finish", () => {
-				serverQueue.songs.shift();
-				this.playNextSong(guild, serverQueue.songs[0]);
-			})
-			.on("error", (error) => {
-				console.error(`Error playing music : ${error}`);
-			});
-		dispatcher.setVolumeLogarithmic(serverQueue.volume);
+		try {
+			const stream = await ytdl(song.url);
+			const dispatcher = guild.me!.voice.connection!.play(stream, { type: "opus" })
+				.on("finish", () => {
+					serverQueue.songs.shift();
+					this.playNextSong(guild, serverQueue.songs[0]);
+				})
+				.on("error", (error) => {
+					console.error(`Error playing music : ${error}`);
+				});
+			dispatcher.setVolumeLogarithmic(serverQueue.volume);
 
-		serverQueue.textChannel.send(`Start playing : **${song.title}**`);
+			serverQueue.textChannel.send(`Start playing : **${song.title}**`);
+		} catch (e) {
+			console.error(`Error retrieving metadata : ${e}`);
+			serverQueue.songs.shift();
+			this.playNextSong(guild, serverQueue.songs[0]);
+		}
 	}
 
 	private searchYouTube(search: string): Promise<string> {
@@ -163,8 +170,8 @@ export class Music {
 		const serverQueue = this._queue.get(message.guild!.id);
 		const songInfo = await ytdl.getInfo(url);
 		const song: ISong = {
-			title: Util.escapeMarkdown(songInfo.title),
-			url: songInfo.video_url,
+			title: Util.escapeMarkdown(songInfo.videoDetails.title),
+			url: songInfo.videoDetails.video_url,
 		};
 		if (!serverQueue) {
 			const queueConstruct: IQueueElement = {
