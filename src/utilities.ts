@@ -73,7 +73,12 @@ export class Utilities {
 				godCount = Math.min(Math.max(parsed, 1), 10);
 			}
 		}
+		
+		const embed = new MessageEmbed()
+			.setTitle(`Smite Gods`)
+			.setColor(0xEDC10E)
+			.setDescription(GOD_LIST.sort(() => .5 - Math.random()).slice(0, godCount).map((god, index) => `${index + 1}. ${god}`).join("\n"));
 
-		msg.channel.send(GOD_LIST.sort(() => .5 - Math.random()).slice(0, godCount).join("\n"));
+		msg.channel.send(embed);
 	}
 }
