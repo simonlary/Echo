@@ -10,6 +10,7 @@ export class Utilities {
 		this._bot = bot;
 		bot.registerCommand("link", this.link, "Get the link to add the bot to your server");
 		bot.registerCommand("code", this.code, "Format code");
+		bot.registerCommand("gods", this.gods, "Get a list of n random Smite gods.")
 		bot.registerCommand("moveTo", this.moveTo, "Move all the people in your voice channel to another voice channel");
 		bot.registerCommand("screenshare", this.screenshare, "Show the link to screenshare in your current voice channel");
 	}
@@ -60,5 +61,19 @@ export class Utilities {
 			.setColor(0x0CA8EE);
 
 		msg.channel.send(embed);
+	}
+
+	
+	private gods(msg: Message, args: string[]) {
+		const GOD_LIST = ["Achilles", "Amaterasu", "Ao Kuang", "Arachne", "Ares", "Artio", "Athena", "Awilix", "Bacchus", "Bakasura", "Bastet", "Bellona", "Cabrakan", "Camazotz", "Cerberus", "Chaac", "Cu Chulainn", "Da Ji", "Erlang Shen", "Fafnir", "Fenrir", "Freya", "Ganesha", "Geb", "Guan Yu", "Hercules", "Horus", "Hun Batz", "Kali", "Khepri", "King Arthur", "Kumbhakarna", "Kuzenbo", "Loki", "Mercury", "Mulan", "Ne Zha", "Nemesis", "Nike", "Odin", "Osiris", "Pele", "Ratatoskr", "Ravana", "Serqet", "Set", "Sobek", "Sun Wukong", "Susano", "Terra", "Thanatos", "Thor", "Tyr", "Vamana", "Xing Tian", "Ymir", "Agni", "Ah Muzen Cab", "Ah Puch", "Anhur", "Anubis", "Aphrodite", "Apollo", "Artemis", "Baba Yaga", "Baron Samedi", "Cernunnos", "Chang'e", "Chernobog", "Chiron", "Chronos", "Cupid", "Discordia", "Hachiman", "Hades", "He Bo", "Heimdallr", "Hel", "Hera", "Hou Yi", "Isis", "Izanami", "Janus", "Jing Wei", "Jormungandr", "Kukulkan", "Medusa", "Merlin", "Neith", "Nox", "Nu Wa", "Olorun", "Persephone", "Poseidon", "Ra", "Raijin", "Rama", "Scylla", "Skadi", "Sol", "Sylvanus", "The Morrigan", "Thoth", "Ullr", "Vulcan", "Xbalanque", "Yemoja", "Zeus", "Zhong Kui", "Tsukuyomi"];
+		let godCount = 5;
+		if (args.length > 0) {
+			const parsed = parseInt(args[0]);
+			if (!isNaN(parsed)) {
+				godCount = Math.min(Math.max(parsed, 1), 10);
+			}
+		}
+
+		msg.channel.send(GOD_LIST.sort(() => .5 - Math.random()).slice(0, godCount).join("\n"));
 	}
 }
