@@ -1,13 +1,38 @@
+import * as fs from "fs";
 import { Message, Permissions, MessageEmbed } from "discord.js";
 import { Bot } from "./bot";
 import { Config } from "./config";
 
+const GodClasses = ["Assassin", "Hunter", "Mage", "Warrior", "Guardian"] as const;
+type GodClass = typeof GodClasses[number];
+
+const GodDamages = ["Physical", "Magical"] as const;
+type GodDamage = typeof GodDamages[number];
+
+const GodRanges = ["Ranged", "Melee"] as const;
+type GodRange = typeof GodRanges[number];
+
+// https://raw.githubusercontent.com/MajorVengeance/smite-random-god/master/gods.json
+interface IGod {
+	id: number,
+	name: string,
+	class: GodClass,
+	damage: GodDamage,
+	range: GodRange,
+	pantheon: string
+}
+
 export class Utilities {
 
 	private _bot: Bot;
+	private readonly _gods: IGod[] = [];
 
 	constructor(config: Config, bot: Bot) {
 		this._bot = bot;
+
+		if (fs.existsSync("gods.json") === true)
+			this._gods = JSON.parse(fs.readFileSync("gods.json", "utf8"));
+
 		bot.registerCommand("link", this.link, "Get the link to add the bot to your server");
 		bot.registerCommand("code", this.code, "Format code");
 		bot.registerCommand("gods", this.gods, "Get a list of n random Smite gods.")
@@ -63,22 +88,33 @@ export class Utilities {
 		msg.channel.send(embed);
 	}
 
-	
-	private gods(msg: Message, args: string[]) {
-		const GOD_LIST = ["Achilles", "Amaterasu", "Ao Kuang", "Arachne", "Ares", "Artio", "Athena", "Awilix", "Bacchus", "Bakasura", "Bastet", "Bellona", "Cabrakan", "Camazotz", "Cerberus", "Chaac", "Cu Chulainn", "Da Ji", "Erlang Shen", "Fafnir", "Fenrir", "Freya", "Ganesha", "Geb", "Guan Yu", "Hercules", "Horus", "Hun Batz", "Kali", "Khepri", "King Arthur", "Kumbhakarna", "Kuzenbo", "Loki", "Mercury", "Mulan", "Ne Zha", "Nemesis", "Nike", "Odin", "Osiris", "Pele", "Ratatoskr", "Ravana", "Serqet", "Set", "Sobek", "Sun Wukong", "Susano", "Terra", "Thanatos", "Thor", "Tyr", "Vamana", "Xing Tian", "Ymir", "Agni", "Ah Muzen Cab", "Ah Puch", "Anhur", "Anubis", "Aphrodite", "Apollo", "Artemis", "Baba Yaga", "Baron Samedi", "Cernunnos", "Chang'e", "Chernobog", "Chiron", "Chronos", "Cupid", "Discordia", "Hachiman", "Hades", "He Bo", "Heimdallr", "Hel", "Hera", "Hou Yi", "Isis", "Izanami", "Janus", "Jing Wei", "Jormungandr", "Kukulkan", "Medusa", "Merlin", "Neith", "Nox", "Nu Wa", "Olorun", "Persephone", "Poseidon", "Ra", "Raijin", "Rama", "Scylla", "Skadi", "Sol", "Sylvanus", "The Morrigan", "Thoth", "Ullr", "Vulcan", "Xbalanque", "Yemoja", "Zeus", "Zhong Kui", "Tsukuyomi"];
+
+	private gods = (msg: Message, args: string[]) => {
 		let godCount = 5;
-		if (args.length > 0) {
-			const parsed = parseInt(args[0]);
-			if (!isNaN(parsed)) {
-				godCount = Math.min(Math.max(parsed, 1), 10);
+		let godClass: GodClass | null = null;
+
+		// Parameter reading
+		for (const arg of args) {
+			if (GodClasses.map(g => g.toLowerCase()).includes(arg)) {
+				godClass = arg as GodClass;
+			} else {
+				const parsed = parseInt(arg);
+				if (!isNaN(parsed)) {
+					godCount = Math.max(1, parsed);
+				}
 			}
 		}
-		
-		const embed = new MessageEmbed()
-			.setTitle(`Smite Gods`)
-			.setColor(0xEDC10E)
-			.setDescription(GOD_LIST.sort(() => .5 - Math.random()).slice(0, godCount).map((god, index) => `${index + 1}. ${god}`).join("\n"));
 
+		// Select gods
+		const filtered = this._gods.filter(g => godClass === null || g.class.toLowerCase() === godClass);
+		const randomized = filtered.sort(() => .5 - Math.random());
+		const selected = randomized.slice(0, Math.min(godCount, randomized.length));
+
+		// Create message
+		const embed = new MessageEmbed()
+			.setTitle("Smite Gods")
+			.setColor(0xEDC10E)
+			.setDescription(selected.map((god, index) => `${index + 1}. ${god.name}`).join("\n"));
 		msg.channel.send(embed);
 	}
 }
