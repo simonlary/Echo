@@ -1,6 +1,6 @@
 import { Guild, Message, TextChannel, Util } from "discord.js";
 import * as https from "https";
-import ytdl from "ytdl-core-discord";
+import ytdl from "ytdl-core";
 import { Bot } from "./bot";
 import { Config } from "./config";
 
@@ -130,8 +130,8 @@ export class Music {
 		}
 
 		try {
-			const stream = await ytdl(song.url);
-			const dispatcher = guild.me!.voice.connection!.play(stream, { type: "opus" })
+			const stream = ytdl(song.url);
+			const dispatcher = guild.me!.voice.connection!.play(stream)
 				.on("finish", () => {
 					serverQueue.songs.shift();
 					this.playNextSong(guild, serverQueue.songs[0]);
