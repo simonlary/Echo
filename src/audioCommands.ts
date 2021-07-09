@@ -21,14 +21,17 @@ export class AudioCommands {
 			return;
 
 		bot.registerHelp("Custom audio commands available :", validFiles.map(x => x.name).join(", "));
-		validFiles.forEach(f => bot.registerCommand(f.name, async (msg: Message, args: string[]) => this.ExecuteAudioCommand(msg, path.join(config.AUDIO_COMMANDS_FOLDER, f.base))));
+		validFiles.forEach(f => bot.registerCommand(f.name, async (msg: Message) => this.ExecuteAudioCommand(msg, path.join(config.AUDIO_COMMANDS_FOLDER, f.base))));
 	}
 
 	private async ExecuteAudioCommand(msg: Message, file: string) {
-		if (msg.guild != null && this.blacklistedGuilds.includes(msg.guild.id)) return msg.channel.send("No audio commands");
-		const voiceChannel = msg.member!.voice.channel;
+		if (msg.guild != null && this.blacklistedGuilds.includes(msg.guild.id)) return msg.channel.send("No audio commands.");
+		if (msg.member == null) return msg.channel.send("This message was posted by no one.");
+		if (msg.client.user == null) return msg.channel.send("The bot isn't any user.");
+
+		const voiceChannel = msg.member.voice.channel;
 		if (!voiceChannel) { return msg.channel.send("You need to be in a voice channel to play audios!"); }
-		const permissions = voiceChannel.permissionsFor(msg.client.user!);
+		const permissions = voiceChannel.permissionsFor(msg.client.user);
 		if (permissions != null && !permissions.has("CONNECT")) {
 			return msg.channel.send("I cannot connect to your voice channel, make sure I have the proper permissions!.");
 		}
@@ -42,9 +45,11 @@ export class AudioCommands {
 
 		try {
 			await voiceChannel.join();
-			msg.guild!.voice!.connection!.play(file)
+			if (msg.guild?.voice?.connection == null) return msg.channel.send("Could not connect to the voice channel.");
+			msg.guild.voice.connection.play(file)
 				.on("finish", () => {
-					msg.guild!.me!.voice.channel!.leave();
+					if (msg.guild?.me?.voice.channel != null)
+						msg.guild.me.voice.channel.leave();
 				})
 				.on("error", (error) => {
 					console.error(`Error playing music : ${error}`);

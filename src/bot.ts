@@ -1,4 +1,4 @@
-import { Client, Message, Util, MessageEmbed } from "discord.js";
+import { Client, Message, MessageEmbed } from "discord.js";
 import { AudioCommands } from "./audioCommands";
 import { Config } from "./config";
 import { Music } from "./music";
@@ -40,7 +40,7 @@ export class Bot {
 		this.client.login(this._config.TOKEN);
 	}
 
-	public registerCommand(name: string, command: Command, help?: string) {
+	public registerCommand(name: string, command: Command, help?: string): void {
 		this._commands.set(name, command);
 
 		if (help != null) {
@@ -48,7 +48,7 @@ export class Bot {
 		}
 	}
 
-	public registerHelp(name: string, help: string) {
+	public registerHelp(name: string, help: string): void {
 		if (name != null && name != "" && help != null && help != "")
 			this._help.set(name, help);
 	}
@@ -56,21 +56,25 @@ export class Bot {
 	private onmessage = async (msg: Message) => {
 		if (msg.author == null || msg.author.bot) { return; }
 		if (!msg.content.startsWith(this._config.PREFIX)) { return; }
+		if (msg.guild == null) { return; }
 
 		const args = msg.content.split(" ");
-		const cmd = args.shift()!.slice(this._config.PREFIX.length);
-		if (msg.guild === undefined) {
-			return msg.reply("You can't send commands by direct message. Use a channel on a server.");
-		}
-		if (this._commands.get(cmd) !== undefined) {
-			this._commands.get(cmd)!(msg, args);
+		const cmdWithPrefix = args.shift();
+
+		if (cmdWithPrefix === undefined)
+			return;
+
+		const cmd = cmdWithPrefix.slice(this._config.PREFIX.length);
+		const command = this._commands.get(cmd);
+		if (command !== undefined) {
+			command(msg, args);
 			if (this._config.DELETE_CALLING_MESSAGES) { msg.delete(); }
 		}
 	}
 
-	private help = (msg: Message, args: string[]) => {
+	private help = (msg: Message) => {
 		const embed = new MessageEmbed()
-			.setTitle('HELP')
+			.setTitle("HELP")
 			.setColor(0xA10025);
 
 		for (const [name, help] of this._help) {

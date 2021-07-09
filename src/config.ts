@@ -8,12 +8,6 @@ interface IConfigFile {
 	noAudioCommandGuilds: string
 }
 
-interface IAudioCommand {
-	command: string;
-	folder: string;
-	help?: string;
-}
-
 export class Config {
 
 	private _audioCommandsFolder: string;
