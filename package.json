@@ -14,15 +14,15 @@
 		"deploy": "node ./out/index.js"
 	},
 	"dependencies": {
-		"@discordjs/opus": "^0.3.3",
-		"discord.js": "^12.5.1",
-		"ffmpeg-static": "^4.2.7",
+		"@discordjs/opus": "^0.5.3",
+		"discord.js": "^12.5.3",
+		"ffmpeg-static": "^4.4.0",
 		"lorembarnak": "^1.0.7",
-		"ytdl-core": "^4.4.3"
+		"ytdl-core": "^4.8.3"
 	},
 	"devDependencies": {
-		"@types/node": "^14.14.20",
+		"@types/node": "^16.3.1",
 		"tslint": "^6.1.3",
-		"typescript": "^4.1.3"
+		"typescript": "^4.3.5"
 	}
 }
