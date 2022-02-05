@@ -63,7 +63,7 @@ export class Music {
 			if (song != null)
 				msg.channel.send(`**${song.title}** has beeen added to the queue!`);
 		}
-	}
+	};
 
 	private stop = (msg: Message) => {
 		if (msg.guild?.me?.voice.connection == null) { return msg.channel.send("This message wasn't sent from a server or the bot isn't connected to a voice channel."); }
@@ -75,7 +75,7 @@ export class Music {
 
 		serverQueue.songs = [];
 		msg.guild.me.voice.connection.dispatcher.end();
-	}
+	};
 	private skip = (msg: Message) => {
 		if (msg.guild?.me?.voice.connection == null) { return msg.channel.send("This message wasn't sent from a server or the bot isn't connected to a voice channel."); }
 		if (msg.member == null) { return msg.channel.send("This message was written by no one."); }
@@ -85,13 +85,13 @@ export class Music {
 		if (!serverQueue) { return msg.channel.send("There is nothing playing that I could skip for you."); }
 
 		msg.guild.me.voice.connection.dispatcher.end();
-	}
+	};
 	private np = (msg: Message) => {
 		if (msg.guild == null) { return msg.channel.send("This message wasn't sent from a server."); }
 		const serverQueue = this._queue.get(msg.guild.id);
 		if (!serverQueue) { return msg.channel.send("There is nothing playing right now."); }
 		msg.channel.send(`Now playing : **${serverQueue.songs[0].title}**`);
-	}
+	};
 	private queue = (msg: Message) => {
 		if (msg.guild == null) { return msg.channel.send("This message wasn't sent from a server."); }
 		const serverQueue = this._queue.get(msg.guild.id);
@@ -101,7 +101,7 @@ export class Music {
 			return `**-** ${song.title}`;
 		}).join("\n");
 		msg.channel.send(message);
-	}
+	};
 	private volume = (msg: Message, args: string[]) => {
 		if (msg.guild?.me?.voice.connection == null) { return msg.channel.send("This message wasn't sent from a server or the bot isn't connected to a voice channel."); }
 		if (msg.member == null) { return msg.channel.send("This message was written by no one."); }
@@ -116,7 +116,7 @@ export class Music {
 		serverQueue.volume = (serverQueue.volume > 1) ? 1 : serverQueue.volume;
 		msg.guild.me.voice.connection.dispatcher.setVolumeLogarithmic(serverQueue.volume);
 		msg.channel.send(`The new volume is **${serverQueue.volume * 100}**`);
-	}
+	};
 	private pause = (msg: Message) => {
 		if (msg.guild?.me?.voice.connection == null) { return msg.channel.send("This message wasn't sent from a server or the bot isn't connected to a voice channel."); }
 		if (msg.member == null) { return msg.channel.send("This message was written by no one."); }
@@ -125,7 +125,7 @@ export class Music {
 		serverQueue.playing = false;
 		msg.guild.me.voice.connection.dispatcher.pause();
 		msg.channel.send("Paused the music!");
-	}
+	};
 	private resume = (msg: Message) => {
 		if (msg.guild?.me?.voice.connection == null) { return msg.channel.send("This message wasn't sent from a server or the bot isn't connected to a voice channel."); }
 		if (msg.member == null) { return msg.channel.send("This message was written by no one."); }
@@ -134,7 +134,7 @@ export class Music {
 		serverQueue.playing = true;
 		msg.guild.me.voice.connection.dispatcher.resume();
 		msg.channel.send("Resumed the music!");
-	}
+	};
 
 	private async playNextSong(guild: Guild, song: ISong) {
 		const serverQueue = this._queue.get(guild.id);

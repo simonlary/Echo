@@ -43,7 +43,7 @@ export class Utilities {
 	private link = async (msg: Message) => {
 		const link = await this._bot.client.generateInvite();
 		msg.channel.send(`You can invite me to your server by going to this link!\n <${link}>`);
-	}
+	};
 
 	private code(msg: Message, args: string[]) {
 		let code = "```" + args[0] + "\n";
@@ -112,5 +112,5 @@ export class Utilities {
 			.setColor(0xEDC10E)
 			.setDescription(selected.map((god, index) => `${index + 1}. ${god.name}`).join("\n"));
 		msg.channel.send(embed);
-	}
+	};
 }

@@ -70,7 +70,7 @@ export class Bot {
 			command(msg, args);
 			if (this._config.DELETE_CALLING_MESSAGES) { msg.delete(); }
 		}
-	}
+	};
 
 	private help = (msg: Message) => {
 		const embed = new MessageEmbed()
@@ -85,6 +85,6 @@ export class Bot {
 		}
 
 		msg.channel.send(embed);
-	}
+	};
 
 }

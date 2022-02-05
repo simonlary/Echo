@@ -13,9 +13,9 @@ export class TTS {
 
 	private lorembarnak = async (msg: Message) => {
 		msg.channel.send(lorembarnak.getText(NUMBER_OF_SWEARS));
-	}
+	};
 
 	private lorembarnaktts = async (msg: Message) => {
 		msg.channel.send(lorembarnak.getText(NUMBER_OF_SWEARS), { tts: true });
-	}
+	};
 }
