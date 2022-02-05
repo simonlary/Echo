@@ -886,5 +886,69 @@
 		"damage": "Physical",
 		"range": "Melee",
 		"pantheon": "Japanese"
+	},
+	{
+		"id": 112,
+		"name": "Danzaburou",
+		"class": "Hunter",
+		"damage": "Physical",
+		"range": "Ranged",
+		"pantheon": "Japanese"
+	},
+	{
+		"id": 113,
+		"name": "Tiamat",
+		"class": "Mage",
+		"damage": "Magical",
+		"range": "Ranged",
+		"pantheon": "Babylonian"
+	},
+	{
+		"id": 114,
+		"name": "Gilgamesh",
+		"class": "Warrior",
+		"damage": "Physical",
+		"range": "Melee",
+		"pantheon": "Babylonian"
+	},
+	{
+		"id": 115,
+		"name": "Morgan Le Fay",
+		"class": "Mage",
+		"damage": "Magical",
+		"range": "Melee",
+		"pantheon": "Arthurian"
+	},
+	{
+		"id": 116,
+		"name": "Charybdis",
+		"class": "Hunter",
+		"damage": "Physical",
+		"range": "Ranged",
+		"pantheon": "Greek"
+	},
+	{
+		"id": 117,
+		"name": "Cliodhna",
+		"class": "Assassin",
+		"damage": "Physical",
+		"range": "Melee",
+		"pantheon": "Celtic"
+	},
+	{
+		"id": 118,
+		"name": "Atlas",
+		"class": "Guardian",
+		"damage": "Magical",
+		"range": "Melee",
+		"pantheon": "Greek"
+	},
+	{
+		"id": 119,
+		"name": "Shiva",
+		"class": "Warrior",
+		"damage": "Physical",
+		"range": "Melee",
+		"pantheon": "Hindu"
 	}
 ]
