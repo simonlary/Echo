@@ -1,52 +1,62 @@
-import * as fs from "fs";
+import { readFile } from "fs/promises";
 
-interface IConfigFile {
+interface ConfigFile {
 	token: string;
-	deleteCallingMessages: boolean;
-	audioCommandsFolder: string;
-	prefix: string;
-	noAudioCommandGuilds: string
+	audioCommandsFolder?: string;
+	audioCommandGuilds?: string[];
+	debugGuildId?: string;
 }
 
 export class Config {
 
-	private _audioCommandsFolder: string;
-	private _deleteCallingMessages: boolean;
-	private _prefix: string;
-	private _token: string;
-	private _noAudioCommandGuilds: string[];
+	private static readonly DEFAULT_CONFIG = {
+		audioCommandsFolder: "audioCommands",
+		audioCommandGuilds: [],
+		debugGuildId: "",
+	};
 
-	constructor() {
-		if (fs.existsSync("bot.config") === false) {
-			throw new Error("No config found. Please create a 'bot.config' file.");
+	private readonly config: Required<ConfigFile>;
+
+	public static async load(): Promise<Config> {
+		const rawContent = await readFile("bot.config", "utf8");
+		const parseContent = JSON.parse(rawContent);
+		if (!this.isConfigFile(parseContent)) {
+			throw new Error("Invalid configuration file format.");
 		}
-		const configFile: IConfigFile = JSON.parse(fs.readFileSync("bot.config", "utf8"));
-
-		this._audioCommandsFolder = configFile.audioCommandsFolder || "";
-		this._deleteCallingMessages = configFile.deleteCallingMessages || false;
-		this._prefix = configFile.prefix || "";
-		this._token = configFile.token;
-		this._noAudioCommandGuilds = (configFile.noAudioCommandGuilds != null) ? configFile.noAudioCommandGuilds.split(",") : [];
+		return new Config(parseContent);
 	}
 
-	public get AUDIO_COMMANDS_FOLDER(): string {
-		return this._audioCommandsFolder;
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	private static isConfigFile(obj: any): obj is ConfigFile {
+		return (
+			obj != null &&
+			typeof obj === "object" &&
+			"token" in obj &&
+			typeof obj.token === "string"
+		);
 	}
 
-	public get DELETE_CALLING_MESSAGES(): boolean {
-		return this._deleteCallingMessages;
+	constructor(configFile: ConfigFile) {
+		this.config = {
+			...Config.DEFAULT_CONFIG,
+			...configFile
+		};
 	}
 
-	public get PREFIX(): string {
-		return this._prefix;
+	public get audioCommandsFolder(): string {
+		return this.config.audioCommandsFolder;
 	}
 
-	public get TOKEN(): string {
-		return this._token;
+	public get token(): string {
+		return this.config.token;
 	}
 
-	public get NO_AUDIO_COMMAND_GUILDS(): string[] {
-		return this._noAudioCommandGuilds;
+	public get noAudioCommandGuilds(): string[] {
+		return this.config.audioCommandGuilds;
+	}
+
+	public get debugGuildId(): string {
+		return this.config.debugGuildId;
 	}
 
 }
