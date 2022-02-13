@@ -19,11 +19,11 @@ export class Config {
 
 	public static async load(): Promise<Config> {
 		const rawContent = await readFile("bot.config", "utf8");
-		const parseContent = JSON.parse(rawContent);
-		if (!this.isConfigFile(parseContent)) {
+		const parsedContent = JSON.parse(rawContent);
+		if (!this.isConfigFile(parsedContent)) {
 			throw new Error("Invalid configuration file format.");
 		}
-		return new Config(parseContent);
+		return new Config(parsedContent);
 	}
 
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any

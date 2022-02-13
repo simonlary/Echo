@@ -1,8 +1,14 @@
-import { Client, CommandInteraction } from "discord.js";
+import { Client, CommandInteraction, MessageEmbed } from "discord.js";
+import { Gods } from "./gods.js";
 
 export class Utilities {
 
-    public constructor(private readonly client: Client) { }
+    public static async create(client: Client) {
+        const gods = await Gods.load();
+        return new Utilities(client, gods);
+    }
+
+    private constructor(private readonly client: Client, private readonly allGods: Gods) { }
 
     public link = async (interaction: CommandInteraction) => {
         const link = this.client.generateInvite({ scopes: ["applications.commands"] });
@@ -35,5 +41,39 @@ export class Utilities {
         const promises = [...member.voice.channel.members.values()].map(toMove => toMove.voice.setChannel(destination));
         await Promise.allSettled(promises);
         interaction.reply(`Moved everyone to the channel ${destination.name}`);
+    };
+
+    public gods = async (interaction: CommandInteraction) => {
+        const options = {
+            number: interaction.options.getInteger("number", true),
+            class: interaction.options.getString("class"),
+            damage: interaction.options.getString("damage"),
+            range: interaction.options.getString("range"),
+            pantheon: interaction.options.getString("pantheon"),
+        };
+
+        let filtered = this.allGods;
+        if (options.class != null) {
+            filtered = filtered.withClass(options.class);
+        }
+        if (options.damage != null) {
+            filtered = filtered.withDamage(options.damage);
+        }
+        if (options.range != null) {
+            filtered = filtered.withRange(options.range);
+        }
+        if (options.pantheon != null) {
+            filtered = filtered.withPantheon(options.pantheon);
+        }
+
+        const result = filtered.getRandom(options.number);
+
+        const embed = new MessageEmbed()
+            .setTitle("Smite Gods")
+            .setColor(0xEDC10E)
+            .setDescription(result.map((god, index) => `${index + 1}. ${god}`).join("\n"));
+
+
+        interaction.reply({ embeds: [embed] });
     };
 }

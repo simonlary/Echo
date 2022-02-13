@@ -3,7 +3,7 @@ import { REST } from "@discordjs/rest";
 import { Routes } from "discord-api-types/rest/v9";
 import { ChannelType } from "discord-api-types/payloads/v9";
 import { Client } from "discord.js";
-import { ChannelOption, Command, commands } from "./commands.js";
+import { ChannelOption, Command, commands, IntegerOption, StringOption } from "./commands.js";
 import { Config } from "./config.js";
 
 async function getApplicationId(token: string) {
@@ -22,9 +22,43 @@ function addChannelOption(builder: SlashCommandBuilder, option: ChannelOption) {
         optionBuilder
             .setName(option.name)
             .setDescription(option.description)
-            .setRequired(option.required ?? false)
+            .setRequired(option.required)
             .addChannelType(ChannelType.GuildVoice as number)
     );
+}
+
+function addStringOption(builder: SlashCommandBuilder, option: StringOption) {
+    builder.addStringOption(optionBuilder => {
+        optionBuilder
+            .setName(option.name)
+            .setDescription(option.description)
+            .setRequired(option.required);
+
+        if (option.choices != null) {
+            optionBuilder.addChoices(option.choices.map(c => [c, c]));
+        }
+
+        return optionBuilder;
+    });
+}
+
+function addIntegerOption(builder: SlashCommandBuilder, option: IntegerOption) {
+    builder.addIntegerOption(optionBuilder => {
+        optionBuilder
+            .setName(option.name)
+            .setDescription(option.description)
+            .setRequired(option.required);
+
+        if (option.minimum != null) {
+            optionBuilder.setMinValue(option.minimum);
+        }
+
+        if (option.maximum != null) {
+            optionBuilder.setMaxValue(option.maximum);
+        }
+
+        return optionBuilder;
+    });
 }
 
 function buildSlashCommand(command: Command) {
@@ -36,6 +70,12 @@ function buildSlashCommand(command: Command) {
         switch (option.type) {
             case "channel":
                 addChannelOption(builder, option);
+                break;
+            case "string":
+                addStringOption(builder, option);
+                break;
+            case "integer":
+                addIntegerOption(builder, option);
                 break;
         }
     }

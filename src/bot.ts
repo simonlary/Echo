@@ -7,24 +7,35 @@ type ExecuteCommandCallback = (interaction: CommandInteraction) => Promise<void>
 
 export class Bot {
 
-    private readonly utilities;
-
     private readonly commandCallbacks: Record<CommandName, ExecuteCommandCallback>;
 
-    public static async create(config: Config): Promise<Bot> {
+    public static async create(config: Config) {
+        console.log("Creating client...");
         const client = new Client({
             intents: [Intents.FLAGS.GUILDS]
         });
+
+        console.log("Creating utilities...");
+        const utilities = await Utilities.create(client);
+
+        console.log("Creating bot...");
+        const bot = new Bot(config, client, utilities);
+
+        console.log("Logging in...");
         await client.login(config.token);
-        return new Bot(config, client);
+
+        return bot;
     }
 
-    private constructor(private readonly config: Config, private readonly client: Client) {
-        this.utilities = new Utilities(client);
-
+    private constructor(
+        private readonly config: Config,
+        private readonly client: Client,
+        private readonly utilities: Utilities
+    ) {
         this.commandCallbacks = {
             link: this.utilities.link,
-            moveto: this.utilities.moveto
+            moveto: this.utilities.moveto,
+            gods: this.utilities.gods
         };
 
         this.client.on("ready", () => console.log("Ready!"));
