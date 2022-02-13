@@ -4,12 +4,12 @@ export class Utilities {
 
     public constructor(private readonly client: Client) { }
 
-    public async link(interaction: CommandInteraction) {
+    public link = async (interaction: CommandInteraction) => {
         const link = this.client.generateInvite({ scopes: ["applications.commands"] });
         await interaction.reply(`You can invite me to your server by going to this link!\n ${link}`);
-    }
+    };
 
-    public async moveto(interaction: CommandInteraction) {
+    public moveto = async (interaction: CommandInteraction) => {
         if (interaction.guild == null) {
             interaction.reply("You need to be in a server to use commands.");
             return;
@@ -33,6 +33,5 @@ export class Utilities {
         const promises = [...member.voice.channel.members.values()].map(toMove => toMove.voice.setChannel(destination));
         await Promise.allSettled(promises);
         interaction.reply(`Moved everyone to the channel ${destination.name}`);
-
-    }
+    };
 }

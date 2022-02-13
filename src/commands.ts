@@ -9,7 +9,7 @@ export interface ChannelOption extends BaseOption {
     channelType: "voice";
 }
 
-export type Option = ChannelOption;
+type Option = ChannelOption;
 
 export interface Command {
     name: string;
@@ -18,26 +18,28 @@ export interface Command {
     isDebug?: boolean;
 }
 
-const commands: Command[] = [
-    {
-        name: "moveto",
+const commands = {
+    moveto: {
         description: "Move all the people in your voice channel to another voice channel.",
         options: [
             {
-                name: "channel",
+                name: "channel" as const,
                 description: "The voice channel to move everyone to.",
-                type: "channel",
-                channelType: "voice",
+                type: "channel" as const,
+                channelType: "voice" as const,
                 required: true,
             }
         ],
         isDebug: true
     },
-    {
-        name: "link",
+    link: {
         description: "Get the link to add the bot to another server.",
         isDebug: true
     }
-];
+};
 
-export { commands };
+export type CommandName = keyof typeof commands;
+
+const commandsArray: Command[] = Object.entries(commands).map(([name, definition]) => ({ name, ...definition }));
+
+export { commandsArray as commands };
