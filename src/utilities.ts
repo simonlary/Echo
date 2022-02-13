@@ -18,15 +18,17 @@ export class Utilities {
         const member = interaction.guild.members.cache.get(interaction.user.id);
         const destination = interaction.options.getChannel("channel");
         if (member == null) {
-            interaction.reply("???????????????");
+            console.error(`"member" is null for user "${interaction.user.tag} (${interaction.user.id})".`);
+            interaction.reply("Sorry, there was an error moving your channel.");
             return;
         }
         if (member.voice.channel == null) {
-            interaction.reply("???????????????");
+            interaction.reply("You are not currently in any voice channel!");
             return;
         }
         if (destination?.type !== "GUILD_VOICE") {
-            interaction.reply("???????????????");
+            console.error(`Destination channel (${destination?.type}) is not a voice channel!`);
+            interaction.reply("Sorry, there was an error moving your channel.");
             return;
         }
 
