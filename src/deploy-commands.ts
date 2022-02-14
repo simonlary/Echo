@@ -2,9 +2,9 @@ import { SlashCommandBuilder } from "@discordjs/builders";
 import { REST } from "@discordjs/rest";
 import { Routes } from "discord-api-types/rest/v9";
 import { ChannelType } from "discord-api-types/payloads/v9";
-import { Client } from "discord.js";
 import { ChannelOption, Command, commands, IntegerOption, StringOption } from "./commands.js";
 import { Config } from "./config.js";
+import { Client } from "discord.js";
 
 async function getApplicationId(token: string) {
     const client = new Client({ intents: [] });
@@ -32,6 +32,7 @@ function addStringOption(builder: SlashCommandBuilder, option: StringOption) {
         optionBuilder
             .setName(option.name)
             .setDescription(option.description)
+            .setAutocomplete(option.autocomplete ?? false)
             .setRequired(option.required);
 
         if (option.choices != null) {
@@ -92,9 +93,12 @@ const applicationId = await getApplicationId(config.token);
 const rest = new REST({ version: "9" }).setToken(config.token);
 
 console.log("Registering global commands...");
-const globalCommands = commands.filter(c => !c.isDebug).map(c => buildSlashCommand(c));
+const globalCommands = commands.filter(c => !c.guildCommand).map(c => buildSlashCommand(c));
 await rest.put(Routes.applicationCommands(applicationId), { body: globalCommands });
 
 console.log("Registering guild commands...");
-const guildCommands = commands.filter(c => c.isDebug).map(c => buildSlashCommand(c));
-await rest.put(Routes.applicationGuildCommands(applicationId, config.debugGuildId), { body: guildCommands });
+const guildCommands = commands.filter(c => c.guildCommand).map(c => buildSlashCommand(c));
+const promises = config.guildCommandsGuildIds.map(guildId => {
+    return rest.put(Routes.applicationGuildCommands(applicationId, guildId), { body: guildCommands });
+});
+await Promise.all(promises);

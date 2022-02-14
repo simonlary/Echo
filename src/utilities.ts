@@ -39,7 +39,7 @@ export class Utilities {
         }
 
         const promises = [...member.voice.channel.members.values()].map(toMove => toMove.voice.setChannel(destination));
-        await Promise.allSettled(promises);
+        await Promise.all(promises);
         interaction.reply(`Moved everyone to the channel ${destination.name}`);
     };
 

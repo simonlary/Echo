@@ -11,6 +11,7 @@ export interface ChannelOption extends BaseOption {
 
 export interface StringOption extends BaseOption {
     type: "string";
+    autocomplete?: boolean;
     choices?: string[];
 }
 
@@ -26,26 +27,22 @@ export interface Command {
     name: string;
     description: string;
     options?: Option[];
-    isDebug?: boolean;
+    guildCommand?: boolean;
 }
 
 const commands = {
-    moveto: {
-        description: "Move all the people in your voice channel to another voice channel.",
+    audio: {
+        description: "Execute a custom audio command.",
         options: [
             {
-                name: "channel",
-                description: "The voice channel to move everyone to.",
-                type: "channel" as const,
-                required: true,
-                channelType: "voice" as const,
-            }
+                name: "command",
+                description: "Which audio command to execute.",
+                type: "string" as const,
+                required: false,
+                autocomplete: true,
+            },
         ],
-        isDebug: true
-    },
-    link: {
-        description: "Get the link to add the bot to another server.",
-        isDebug: true
+        guildCommand: true // This will always be true
     },
     gods: {
         description: "Get a list of random Smite gods.",
@@ -84,9 +81,26 @@ const commands = {
                 type: "string" as const,
                 required: false,
                 choices: ["Arthurian", "Babylonian", "Celtic", "Chinese", "Egyptian", "Great Old Ones", "Greek", "Hindu", "Japanese", "Mayan", "Norse", "Polynesian", "Roman", "Slavic", "Yoruba"]
+            },
+        ],
+        guildCommand: true,
+    },
+    link: {
+        description: "Get the link to add the bot to another server.",
+        guildCommand: true,
+    },
+    moveto: {
+        description: "Move all the people in your voice channel to another voice channel.",
+        options: [
+            {
+                name: "channel",
+                description: "The voice channel to move everyone to.",
+                type: "channel" as const,
+                required: true,
+                channelType: "voice" as const,
             }
         ],
-        isDebug: true
+        guildCommand: true,
     },
 };
 

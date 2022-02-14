@@ -3,16 +3,14 @@ import { readFile } from "fs/promises";
 interface ConfigFile {
 	token: string;
 	audioCommandsFolder?: string;
-	audioCommandGuilds?: string[];
-	debugGuildId?: string;
+	guildCommandsGuildIds?: string[];
 }
 
 export class Config {
 
 	private static readonly DEFAULT_CONFIG = {
 		audioCommandsFolder: "audioCommands",
-		audioCommandGuilds: [],
-		debugGuildId: "",
+		guildCommandsGuildIds: [],
 	};
 
 	private readonly config: Required<ConfigFile>;
@@ -51,12 +49,8 @@ export class Config {
 		return this.config.token;
 	}
 
-	public get noAudioCommandGuilds(): string[] {
-		return this.config.audioCommandGuilds;
-	}
-
-	public get debugGuildId(): string {
-		return this.config.debugGuildId;
+	public get guildCommandsGuildIds(): string[] {
+		return this.config.guildCommandsGuildIds;
 	}
 
 }

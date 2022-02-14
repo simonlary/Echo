@@ -1,25 +1,30 @@
-import { Client, CommandInteraction, Intents, Interaction } from "discord.js";
+import { AutocompleteInteraction, Client, CommandInteraction, Intents, Interaction } from "discord.js";
+import { AudioCommands } from "./audioCommands.js";
 import { CommandName } from "./commands.js";
 import { Config } from "./config.js";
 import { Utilities } from "./utilities.js";
 
 type ExecuteCommandCallback = (interaction: CommandInteraction) => Promise<void>;
+type AutocompleteCallback = (interaction: AutocompleteInteraction) => Promise<void>;
 
 export class Bot {
 
-    private readonly commandCallbacks: Record<CommandName, ExecuteCommandCallback>;
+    private readonly commandCallbacks: Record<CommandName, { execute: ExecuteCommandCallback, autocomplete?: AutocompleteCallback }>;
 
     public static async create(config: Config) {
         console.log("Creating client...");
         const client = new Client({
-            intents: [Intents.FLAGS.GUILDS]
+            intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_VOICE_STATES]
         });
 
         console.log("Creating utilities...");
         const utilities = await Utilities.create(client);
 
+        console.log("Creating custom audio commands...");
+        const audioCommands = await AudioCommands.create(client, config);
+
         console.log("Creating bot...");
-        const bot = new Bot(config, client, utilities);
+        const bot = new Bot(config, client, utilities, audioCommands);
 
         console.log("Logging in...");
         await client.login(config.token);
@@ -30,12 +35,23 @@ export class Bot {
     private constructor(
         private readonly config: Config,
         private readonly client: Client,
-        private readonly utilities: Utilities
+        private readonly utilities: Utilities,
+        private readonly audioCommands: AudioCommands
     ) {
         this.commandCallbacks = {
-            link: this.utilities.link,
-            moveto: this.utilities.moveto,
-            gods: this.utilities.gods
+            audio: {
+                execute: this.audioCommands.audio,
+                autocomplete: this.audioCommands.autocompleteAudio,
+            },
+            gods: {
+                execute: this.utilities.gods,
+            },
+            link: {
+                execute: this.utilities.link,
+            },
+            moveto: {
+                execute: this.utilities.moveto,
+            },
         };
 
         this.client.on("ready", () => console.log("Ready!"));
@@ -49,25 +65,54 @@ export class Bot {
     }
 
     private onInteractionCreate = async (interaction: Interaction) => {
-        if (!interaction.isCommand()) {
-            console.warn(`Received an interaction that is not a command : ${interaction.type}`);
+        if (interaction.isCommand()) {
+            this.executeCommand(interaction);
             return;
         }
 
+        if (interaction.isAutocomplete()) {
+            this.autocompleteCommand(interaction);
+            return;
+        }
+
+        console.warn(`Received an interaction that is not a supported : ${interaction.type}`);
+    };
+
+    private executeCommand = async (interaction: CommandInteraction) => {
         if (!this.isValidCommandName(interaction.commandName)) {
-            console.warn(`Received an invalid command name : ${interaction.commandName}`);
+            console.warn(`Received an invalid command name to execute : ${interaction.commandName}`);
             return;
         }
 
         console.log(`User "${interaction.user.tag}" (${interaction.user.id}) executed command "${interaction.commandName}".`);
 
         try {
-            await this.commandCallbacks[interaction.commandName](interaction);
+            await this.commandCallbacks[interaction.commandName].execute(interaction);
         } catch (e) {
             console.error(e);
             if (!interaction.replied) {
                 interaction.reply({ content: "Sorry, there was an error executing you command.", ephemeral: true });
             }
+        }
+    };
+
+    private autocompleteCommand = async (interaction: AutocompleteInteraction) => {
+        if (!this.isValidCommandName(interaction.commandName)) {
+            console.warn(`Received an invalid command name to autocomplete : ${interaction.commandName}`);
+            return;
+        }
+
+        const command = this.commandCallbacks[interaction.commandName];
+
+        if (command.autocomplete == null) {
+            console.warn(`Received an autocomplete request for command "${interaction.commandName}" which does not implement autocompletion.`);
+            return;
+        }
+
+        try {
+            await command.autocomplete(interaction);
+        } catch (e) {
+            console.error(e);
         }
     };
 
