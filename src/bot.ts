@@ -1,15 +1,19 @@
+import { SlashCommandBuilder } from "@discordjs/builders";
+import { REST } from "@discordjs/rest";
+import { Routes } from "discord-api-types/rest/v9";
 import { AutocompleteInteraction, Client, CommandInteraction, Intents, Interaction } from "discord.js";
-import { AudioCommands } from "./audioCommands.js";
-import { CommandName } from "./commands.js";
+import { readdir } from "fs/promises";
+import { parse, join } from "path";
 import { Config } from "./config.js";
-import { Utilities } from "./utilities.js";
 
-type ExecuteCommandCallback = (interaction: CommandInteraction) => Promise<void>;
-type AutocompleteCallback = (interaction: AutocompleteInteraction) => Promise<void>;
+interface Command {
+    name: string;
+    file: string;
+}
 
 export class Bot {
 
-    private readonly commandCallbacks: Record<CommandName, { execute: ExecuteCommandCallback, autocomplete?: AutocompleteCallback }>;
+    private static readonly SUPPORTED_EXTENSIONS = [".wav", ".mp3"];
 
     public static async create(config: Config) {
         console.log("Creating client...");
@@ -17,46 +21,43 @@ export class Bot {
             intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_VOICE_STATES]
         });
 
-        console.log("Creating utilities...");
-        const utilities = await Utilities.create(client);
-
-        console.log("Creating custom audio commands...");
-        const audioCommands = await AudioCommands.create(client, config);
-
         console.log("Creating bot...");
-        const bot = new Bot(config, client, utilities, audioCommands);
+        const bot = new Bot(config, client);
 
         console.log("Logging in...");
         await client.login(config.token);
 
+        console.log("Loading all commands...");
+        await bot.init();
+
+        console.log("Commands loaded!");
         return bot;
     }
 
+    private commands: Command[] = [];
+
     private constructor(
         private readonly config: Config,
-        private readonly client: Client,
-        private readonly utilities: Utilities,
-        private readonly audioCommands: AudioCommands
+        private readonly client: Client
     ) {
-        this.commandCallbacks = {
-            audio: {
-                execute: this.audioCommands.audio,
-                autocomplete: this.audioCommands.autocompleteAudio,
-            },
-            gods: {
-                execute: this.utilities.gods,
-            },
-            link: {
-                execute: this.utilities.link,
-            },
-            moveto: {
-                execute: this.utilities.moveto,
-            },
-        };
-
         this.client.on("ready", () => console.log("Ready!"));
         this.client.on("disconnect", () => { console.log("Disconnected"); });
         this.client.on("interactionCreate", this.onInteractionCreate);
+    }
+
+    private async init() {
+        this.commands = await this.getAllCommands(this.config.commandsFolder);
+        const slashCommands = this.commands.map(c => this.getSlashCommandForCommand(c));
+
+        const applicationId = this.client.application?.id;
+        if (applicationId == null) {
+            throw new Error("Couldn't get the application id.");
+        }
+
+        const rest = new REST({ version: "9" }).setToken(this.config.token);
+
+        const promises = this.config.guilds.map(guildId => rest.put(Routes.applicationGuildCommands(applicationId, guildId), { body: slashCommands }));
+        await Promise.all(promises);
     }
 
     public shutdown() {
@@ -64,59 +65,47 @@ export class Bot {
         this.client.destroy();
     }
 
+    private async getAllCommands(commandsFolder: string) {
+        try {
+            return (await readdir(commandsFolder))
+                .map(f => parse(f))
+                .filter(f => Bot.SUPPORTED_EXTENSIONS.includes(f.ext))
+                .map(f => ({ name: f.name, file: join(commandsFolder, f.base) }));
+        } catch (e) {
+            console.warn(`Commands folder could not be loaded : ${e}`);
+            return [];
+        }
+    }
+
+    private getSlashCommandForCommand(command: Command) {
+        return new SlashCommandBuilder()
+            .setName(command.name)
+            .setDescription(`Play the "${command.name}" audio.`)
+            .toJSON();
+    }
+
     private onInteractionCreate = async (interaction: Interaction) => {
-        if (interaction.isCommand()) {
-            this.executeCommand(interaction);
+        if (!interaction.isCommand()) {
+            console.warn(`Received an interaction that is not a command : ${interaction.type}`);
             return;
         }
 
-        if (interaction.isAutocomplete()) {
-            this.autocompleteCommand(interaction);
-            return;
-        }
-
-        console.warn(`Received an interaction that is not a supported : ${interaction.type}`);
-    };
-
-    private executeCommand = async (interaction: CommandInteraction) => {
-        if (!this.isValidCommandName(interaction.commandName)) {
+        const command = this.commands.find(c => c.name === interaction.commandName);
+        if (command == null) {
             console.warn(`Received an invalid command name to execute : ${interaction.commandName}`);
             return;
         }
 
-        console.log(`User "${interaction.user.tag}" (${interaction.user.id}) executed command "${interaction.commandName}".`);
+        console.log(`User "${interaction.user.tag}" (${interaction.user.id}) executed command "${command.name}".`);
 
-        try {
-            await this.commandCallbacks[interaction.commandName].execute(interaction);
-        } catch (e) {
-            console.error(e);
-            if (!interaction.replied) {
-                interaction.reply({ content: "Sorry, there was an error executing you command.", ephemeral: true });
-            }
-        }
+        interaction.reply({ content: "Not implemented.", ephemeral: true });
+        // try {
+        //     await this.commandCallbacks[interaction.commandName].execute(interaction);
+        // } catch (e) {
+        //     console.error(e);
+        //     if (!interaction.replied) {
+        //         interaction.reply({ content: "Sorry, there was an error executing you command.", ephemeral: true });
+        //     }
+        // }
     };
-
-    private autocompleteCommand = async (interaction: AutocompleteInteraction) => {
-        if (!this.isValidCommandName(interaction.commandName)) {
-            console.warn(`Received an invalid command name to autocomplete : ${interaction.commandName}`);
-            return;
-        }
-
-        const command = this.commandCallbacks[interaction.commandName];
-
-        if (command.autocomplete == null) {
-            console.warn(`Received an autocomplete request for command "${interaction.commandName}" which does not implement autocompletion.`);
-            return;
-        }
-
-        try {
-            await command.autocomplete(interaction);
-        } catch (e) {
-            console.error(e);
-        }
-    };
-
-    private isValidCommandName(name: string): name is CommandName {
-        return Object.keys(this.commandCallbacks).includes(name);
-    }
 }
