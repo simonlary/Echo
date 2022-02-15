@@ -1,7 +1,8 @@
 import { SlashCommandBuilder } from "@discordjs/builders";
 import { REST } from "@discordjs/rest";
+import { AudioPlayerStatus, createAudioPlayer, createAudioResource, entersState, joinVoiceChannel, VoiceConnection, VoiceConnectionStatus } from "@discordjs/voice";
 import { Routes } from "discord-api-types/rest/v9";
-import { AutocompleteInteraction, Client, CommandInteraction, Intents, Interaction } from "discord.js";
+import { Client, CommandInteraction, Intents, Interaction } from "discord.js";
 import { readdir } from "fs/promises";
 import { parse, join } from "path";
 import { Config } from "./config.js";
@@ -14,6 +15,8 @@ interface Command {
 export class Bot {
 
     private static readonly SUPPORTED_EXTENSIONS = [".wav", ".mp3"];
+
+    private readonly voiceConnections = new Map<string, VoiceConnection>();
 
     public static async create(config: Config) {
         console.log("Creating client...");
@@ -98,14 +101,61 @@ export class Bot {
 
         console.log(`User "${interaction.user.tag}" (${interaction.user.id}) executed command "${command.name}".`);
 
-        interaction.reply({ content: "Not implemented.", ephemeral: true });
-        // try {
-        //     await this.commandCallbacks[interaction.commandName].execute(interaction);
-        // } catch (e) {
-        //     console.error(e);
-        //     if (!interaction.replied) {
-        //         interaction.reply({ content: "Sorry, there was an error executing you command.", ephemeral: true });
-        //     }
-        // }
+        try {
+            this.executeCommand(command, interaction);
+        } catch (e) {
+            console.error(e);
+            if (!interaction.replied) {
+                interaction.reply({ content: "Sorry, there was an error executing you command.", ephemeral: true });
+            }
+        }
+    };
+
+    private executeCommand = async (command: Command, interaction: CommandInteraction) => {
+        if (interaction.guild == null) {
+            interaction.reply({ content: "You need to be in a server to use commands.", ephemeral: true });
+            return;
+        }
+
+        const member = interaction.guild.members.cache.get(interaction.user.id);
+        if (member == null) {
+            console.error(`"member" is null for user "${interaction.user.tag} (${interaction.user.id})".`);
+            interaction.reply({ content: "Sorry, there was an error executing you command.", ephemeral: true });
+            return;
+        }
+
+        if (member.voice.channel == null) {
+            interaction.reply({ content: "You are not currently in any voice channel!", ephemeral: true });
+            return;
+        }
+
+        if (this.voiceConnections.has(interaction.guild.id)) {
+            interaction.reply({ content: "I am already in use!", ephemeral: true });
+            return;
+        }
+
+        interaction.reply({ content: `Playing "${command.name}"...`, ephemeral: true });
+
+        const voiceConnection = joinVoiceChannel({
+            channelId: member.voice.channel.id,
+            guildId: interaction.guild.id,
+            adapterCreator: interaction.guild.voiceAdapterCreator,
+        });
+
+        this.voiceConnections.set(interaction.guild.id, voiceConnection);
+
+        await entersState(voiceConnection, VoiceConnectionStatus.Ready, 5_000);
+
+        const audioResource = createAudioResource(command.file);
+        const audioPlayer = createAudioPlayer();
+        audioPlayer.play(audioResource);
+        voiceConnection.subscribe(audioPlayer);
+
+        await entersState(audioPlayer, AudioPlayerStatus.Idle, 30_000);
+
+        audioPlayer.stop();
+        voiceConnection.destroy();
+
+        this.voiceConnections.delete(interaction.guild.id);
     };
 }
