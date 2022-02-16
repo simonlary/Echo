@@ -102,39 +102,41 @@ export class Bot {
         console.log(`User "${interaction.user.tag}" (${interaction.user.id}) executed command "${command.name}".`);
 
         try {
-            this.executeCommand(command, interaction);
+            await this.executeCommand(command, interaction);
         } catch (e) {
             console.error(e);
-            if (!interaction.replied) {
-                interaction.reply({ content: "Sorry, there was an error executing you command.", ephemeral: true });
+            if (interaction.replied) {
+                await interaction.followUp({ content: "Sorry, there was an error executing you command.", ephemeral: true });
+            } else {
+                await interaction.reply({ content: "Sorry, there was an error executing you command.", ephemeral: true });
             }
         }
     };
 
     private executeCommand = async (command: Command, interaction: CommandInteraction) => {
         if (interaction.guild == null) {
-            interaction.reply({ content: "You need to be in a server to use commands.", ephemeral: true });
+            await interaction.reply({ content: "You need to be in a server to use commands.", ephemeral: true });
             return;
         }
 
         const member = interaction.guild.members.cache.get(interaction.user.id);
         if (member == null) {
             console.error(`"member" is null for user "${interaction.user.tag} (${interaction.user.id})".`);
-            interaction.reply({ content: "Sorry, there was an error executing you command.", ephemeral: true });
+            await interaction.reply({ content: "Sorry, there was an error executing you command.", ephemeral: true });
             return;
         }
 
         if (member.voice.channel == null) {
-            interaction.reply({ content: "You are not currently in any voice channel!", ephemeral: true });
+            await interaction.reply({ content: "You are not currently in any voice channel!", ephemeral: true });
             return;
         }
 
         if (this.voiceConnections.has(interaction.guild.id)) {
-            interaction.reply({ content: "I am already in use!", ephemeral: true });
+            await interaction.reply({ content: "I am already in use!", ephemeral: true });
             return;
         }
 
-        interaction.reply({ content: `Playing "${command.name}"...`, ephemeral: true });
+        await interaction.reply({ content: `Playing "${command.name}"...`, ephemeral: true });
 
         const voiceConnection = joinVoiceChannel({
             channelId: member.voice.channel.id,

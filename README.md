@@ -1,26 +1,21 @@
-# Echo: A Discord Music Bot
+# Echo: A Discord Audio Clip Bot
 
 ## Dependencies
-- NodeJS
+
+- Node.js >=16.6.0
 
 ## Configuration file
+
 A configuration file named `bot.config` is required to setup the bot. You need to add:
-- The bot token from discord
-- The external audio commands you would like to use
+
+- The bot token from discord.
+- The folder where the files used for the audio commands you would like to use are.
+- The ids of the guilds where you want to use these commands.
 
 ```json
 {
-	"token": "YOUR-TOKEN-HERE",
-	"audioCommandsFolder": "YOUR-CONTAINING-FOLDER-PATH"
-}
-```
-
-## External audio commands
-Echo allows you to play audio files directly from the server. To do so, you need to add the audio files in a folder and the path to this folder in your config file. Every file in this folder will be able to be played by typing the name of the file (without the extension) with the prefix as a command.
-
-Example:
-```json
-{
-	"audioCommandsFolder": "myFolderFullOfFunnySounds"
+  "token": "YOUR-TOKEN-HERE",
+  "commandsFolder": "YOUR-CONTAINING-FOLDER-PATH",
+  "guilds": ["YOUR-GUILD-ID"]
 }
 ```

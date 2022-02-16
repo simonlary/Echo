@@ -8,6 +8,9 @@
 	"main": "index.js",
 	"license": "MIT",
 	"type": "module",
+	"engines": {
+		"node": ">=16.6.0"
+	},
 	"scripts": {
 		"lint": "eslint src/** --fix",
 		"build": "tsc",
