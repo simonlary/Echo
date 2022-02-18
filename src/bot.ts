@@ -30,10 +30,10 @@ export class Bot {
         console.log("Logging in...");
         await client.login(config.token);
 
-        console.log("Loading all commands...");
+        console.log("Registering all commands...");
         await bot.init();
 
-        console.log("Commands loaded!");
+        console.log("Bot started!");
         return bot;
     }
 
@@ -43,7 +43,6 @@ export class Bot {
         private readonly config: Config,
         private readonly client: Client
     ) {
-        this.client.on("ready", () => console.log("Ready!"));
         this.client.on("disconnect", () => { console.log("Disconnected"); });
         this.client.on("interactionCreate", this.onInteractionCreate);
     }

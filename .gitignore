@@ -20,8 +20,6 @@ jsconfig.json
 node_modules
 npm-debug.log
 # -------[Config file]-------- #
-bot.config
-# -------[Testing custom commands]-------- #
+.env
+# -------[Commands test folder]-------- #
 audioCommands
-
-nodemon.json

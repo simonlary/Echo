@@ -5,7 +5,7 @@ let bot: Bot;
 
 try {
     console.log("Loading config...");
-    const config = await Config.load();
+    const config = new Config();
 
     console.log("Instanciating bot...");
     // We need to keep this reference so the bot doesn't get garbage collected.
@@ -17,5 +17,9 @@ try {
 }
 
 process.addListener("SIGINT", () => {
+    bot.shutdown();
+});
+
+process.addListener("SIGTERM", () => {
     bot.shutdown();
 });
