@@ -6,8 +6,9 @@ COPY . .
 RUN npm run build
 
 FROM node:16-alpine
+WORKDIR /app
 ENV NODE_ENV=production
 COPY package*.json ./
 RUN npm ci --production
-COPY --from=builder /app/out out
+COPY --from=builder /app/out ./out
 CMD [ "node", "out/index.js" ]
