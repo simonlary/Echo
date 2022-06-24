@@ -18,20 +18,20 @@
 		"deploy": "node ./out/index.js"
 	},
 	"dependencies": {
-		"@discordjs/builders": "^0.12.0",
+		"@discordjs/builders": "^0.15.0",
 		"@discordjs/opus": "^0.5.3",
-		"@discordjs/rest": "^0.3.0",
-		"@discordjs/voice": "^0.8.0",
-		"discord-api-types": "^0.27.0",
-		"discord.js": "^13.6.0",
-		"dotenv": "^16.0.0",
+		"@discordjs/rest": "^0.5.0",
+		"@discordjs/voice": "^0.10.0",
+		"discord-api-types": "^0.35.0",
+		"discord.js": "^13.8.1",
+		"dotenv": "^16.0.1",
 		"ffmpeg-static": "^4.4.1",
-		"libsodium-wrappers": "^0.7.9"
+		"libsodium-wrappers": "^0.7.10"
 	},
 	"devDependencies": {
-		"@typescript-eslint/eslint-plugin": "^5.11.0",
-		"@typescript-eslint/parser": "^5.11.0",
-		"eslint": "^8.9.0",
-		"typescript": "^4.5.5"
+		"@typescript-eslint/eslint-plugin": "^5.29.0",
+		"@typescript-eslint/parser": "^5.29.0",
+		"eslint": "^8.18.0",
+		"typescript": "^4.7.4"
 	}
 }
