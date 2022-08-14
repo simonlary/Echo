@@ -9,7 +9,7 @@ import {
   VoiceConnectionStatus,
 } from "@discordjs/voice";
 import { addSpeechEvent, resolveSpeechWithWitai, VoiceMessage } from "discord-speech-recognition";
-import { Client, CommandInteraction, Interaction, SlashCommandBuilder } from "discord.js";
+import { Client, CommandInteraction, Interaction, SlashCommandBuilder, TextBasedChannel } from "discord.js";
 import { readdir } from "fs/promises";
 import { parse, join } from "path";
 import { Config } from "./config.js";
@@ -22,6 +22,7 @@ interface AudioCommand {
 interface ActiveGuild {
   voiceConnection: VoiceConnection;
   audioPlayer?: AudioPlayer;
+  textChannel?: TextBasedChannel;
 }
 
 export class Bot {
@@ -147,7 +148,6 @@ export class Bot {
       return; // No text was recognized.
     }
 
-    console.log(message.content);
     const words = message.content
       .replace(/['!"#$%&\\'()*+,\-./:;<=>?@[\\\]^_`{|}~']/g, " ")
       .split(" ")
@@ -169,6 +169,9 @@ export class Bot {
       return; // Something is already playing. Just ignore the trigger word.
     }
 
+    console.log(`Found audio command "${command.name}" in text : "${message.content}"`);
+    await activeGuild.textChannel?.send(`${message.author} just said : *${command.name}*`);
+
     const audioResource = createAudioResource(command.file);
     const audioPlayer = createAudioPlayer();
     activeGuild.audioPlayer = audioPlayer;
@@ -182,8 +185,6 @@ export class Bot {
 
     activeGuild.audioPlayer.stop();
     activeGuild.audioPlayer = undefined;
-
-    console.log(`Found audio command "${command.name}" in text : "${message.content}"`);
   };
 
   private executeJoin = async (interaction: CommandInteraction) => {
@@ -209,6 +210,8 @@ export class Bot {
       return;
     }
 
+    const textChannel = member.voice.channel.isTextBased() ? member.voice.channel : interaction.channel ?? undefined;
+
     const voiceConnection = joinVoiceChannel({
       channelId: member.voice.channel.id,
       guildId: interaction.guild.id,
@@ -216,7 +219,7 @@ export class Bot {
       adapterCreator: interaction.guild.voiceAdapterCreator,
     });
 
-    this.activeGuilds.set(interaction.guild.id, { voiceConnection });
+    this.activeGuilds.set(interaction.guild.id, { voiceConnection, textChannel });
 
     await interaction.reply({ content: `Joined channel: ${member.voice.channel}`, ephemeral: true });
   };
