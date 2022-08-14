@@ -1,4 +1,5 @@
 import {
+  AudioPlayer,
   AudioPlayerStatus,
   createAudioPlayer,
   createAudioResource,
@@ -7,25 +8,46 @@ import {
   VoiceConnection,
   VoiceConnectionStatus,
 } from "@discordjs/voice";
-import { Client, CommandInteraction, Interaction, REST, Routes, SlashCommandBuilder } from "discord.js";
+import { addSpeechEvent, resolveSpeechWithWitai, VoiceMessage } from "discord-speech-recognition";
+import {
+  Client,
+  CommandInteraction,
+  Interaction,
+  REST,
+  Routes,
+  SlashCommandBuilder,
+  TextBasedChannel,
+} from "discord.js";
 import { readdir } from "fs/promises";
 import { parse, join } from "path";
 import { Config } from "./config.js";
 
-interface Command {
+interface AudioCommand {
   name: string;
   file: string;
+}
+
+interface ActiveGuild {
+  voiceConnection: VoiceConnection;
+  audioPlayer?: AudioPlayer;
+  textChannel?: TextBasedChannel;
 }
 
 export class Bot {
   private static readonly SUPPORTED_EXTENSIONS = [".wav", ".mp3"];
 
-  private readonly voiceConnections = new Map<string, VoiceConnection>();
+  private readonly activeGuilds = new Map<string, ActiveGuild>();
 
   public static async create(config: Config) {
     console.log("Creating client...");
     const client = new Client({
       intents: ["Guilds", "GuildVoiceStates"],
+    });
+
+    console.log("Attaching speech listener...");
+    addSpeechEvent(client, {
+      key: config.witAiToken,
+      speechRecognition: resolveSpeechWithWitai,
     });
 
     console.log("Creating bot...");
@@ -41,18 +63,20 @@ export class Bot {
     return bot;
   }
 
-  private commands: Command[] = [];
+  private audioCommands: AudioCommand[] = [];
 
   private constructor(private readonly config: Config, private readonly client: Client) {
     this.client.on("disconnect", () => {
       console.log("Disconnected");
     });
     this.client.on("interactionCreate", this.onInteractionCreate);
+    this.client.on("speech", this.onSpeech);
   }
 
   private async init() {
-    this.commands = await this.getAllCommands(this.config.commandsFolder);
-    const slashCommands = this.commands.map((c) => this.getSlashCommandForCommand(c));
+    this.audioCommands = await this.getAllCommands(this.config.commandsFolder);
+    const baseAudioCommands = this.getBaseSlashCommands();
+    const slashAudioCommands = this.audioCommands.map((c) => this.getSlashCommandForCommand(c));
 
     const applicationId = this.client.application?.id;
     if (applicationId == null) {
@@ -62,7 +86,9 @@ export class Bot {
     const rest = new REST().setToken(this.config.token);
 
     const promises = this.config.guilds.map((guildId) =>
-      rest.put(Routes.applicationGuildCommands(applicationId, guildId), { body: slashCommands })
+      rest.put(Routes.applicationGuildCommands(applicationId, guildId), {
+        body: [...baseAudioCommands, ...slashAudioCommands],
+      })
     );
     await Promise.all(promises);
   }
@@ -84,8 +110,17 @@ export class Bot {
     }
   }
 
-  private getSlashCommandForCommand(command: Command) {
+  private getSlashCommandForCommand(command: AudioCommand) {
     return new SlashCommandBuilder().setName(command.name).setDescription(`Play the "${command.name}" audio.`).toJSON();
+  }
+
+  private getBaseSlashCommands() {
+    return [
+      new SlashCommandBuilder()
+        .setName("join")
+        .setDescription("Make the bot join the voice channel and and start to listen for triggering keywords."),
+      new SlashCommandBuilder().setName("leave").setDescription("Make the bot leave the voice channel."),
+    ];
   }
 
   private onInteractionCreate = async (interaction: Interaction) => {
@@ -94,16 +129,22 @@ export class Bot {
       return;
     }
 
-    const command = this.commands.find((c) => c.name === interaction.commandName);
-    if (command == null) {
-      console.warn(`Received an invalid command name to execute : ${interaction.commandName}`);
-      return;
-    }
-
-    console.log(`User "${interaction.user.tag}" (${interaction.user.id}) executed command "${command.name}".`);
+    console.log(
+      `User "${interaction.user.tag}" (${interaction.user.id}) executed command "${interaction.commandName}".`
+    );
 
     try {
-      await this.executeCommand(command, interaction);
+      if (interaction.commandName === "join") {
+        this.executeJoin(interaction);
+      } else if (interaction.commandName === "leave") {
+        this.executeLeave(interaction);
+      } else {
+        const audioCommand = this.audioCommands.find((c) => c.name === interaction.commandName);
+        if (audioCommand == null) {
+          throw new Error(`Received an invalid command name to execute : ${interaction.commandName}`);
+        }
+        await this.executeAudioCommand(audioCommand, interaction);
+      }
     } catch (e) {
       console.error(e);
       if (interaction.replied) {
@@ -114,7 +155,51 @@ export class Bot {
     }
   };
 
-  private executeCommand = async (command: Command, interaction: CommandInteraction) => {
+  private onSpeech = async (message: VoiceMessage) => {
+    if (message.content == null) {
+      return; // No text was recognized.
+    }
+
+    const words = message.content
+      .replace(/['!"#$%&\\'()*+,\-./:;<=>?@[\\\]^_`{|}~']/g, " ")
+      .split(" ")
+      .map((w) => w.toLowerCase());
+    const command = this.audioCommands.find((c) => words.includes(c.name.toLowerCase()));
+
+    if (command == null) {
+      return; // No audio command trigger word was said.
+    }
+
+    const activeGuild = this.activeGuilds.get(message.guild.id);
+
+    if (activeGuild == null) {
+      console.error("activeGuild was null/undefined");
+      return;
+    }
+
+    if (activeGuild.audioPlayer != null) {
+      return; // Something is already playing. Just ignore the trigger word.
+    }
+
+    console.log(`Found audio command "${command.name}" in text : "${message.content}"`);
+    await activeGuild.textChannel?.send(`${message.author} just said : *${command.name}*`);
+
+    const audioResource = createAudioResource(command.file);
+    const audioPlayer = createAudioPlayer();
+    activeGuild.audioPlayer = audioPlayer;
+
+    await entersState(activeGuild.voiceConnection, VoiceConnectionStatus.Ready, 5_000);
+
+    activeGuild.voiceConnection.subscribe(audioPlayer);
+    audioPlayer.play(audioResource);
+
+    await entersState(audioPlayer, AudioPlayerStatus.Idle, 30_000);
+
+    activeGuild.audioPlayer.stop();
+    activeGuild.audioPlayer = undefined;
+  };
+
+  private executeJoin = async (interaction: CommandInteraction) => {
     if (interaction.guild == null) {
       await interaction.reply({ content: "You need to be in a server to use commands.", ephemeral: true });
       return;
@@ -132,12 +217,66 @@ export class Bot {
       return;
     }
 
-    if (this.voiceConnections.has(interaction.guild.id)) {
+    if (this.activeGuilds.has(interaction.guild.id)) {
       await interaction.reply({ content: "I am already in use!", ephemeral: true });
       return;
     }
 
-    await interaction.reply({ content: `Playing "${command.name}"...`, ephemeral: true });
+    const textChannel = member.voice.channel.isTextBased() ? member.voice.channel : interaction.channel ?? undefined;
+
+    const voiceConnection = joinVoiceChannel({
+      channelId: member.voice.channel.id,
+      guildId: interaction.guild.id,
+      selfDeaf: false,
+      adapterCreator: interaction.guild.voiceAdapterCreator,
+    });
+
+    this.activeGuilds.set(interaction.guild.id, { voiceConnection, textChannel });
+
+    await interaction.reply({ content: `Joined channel: ${member.voice.channel}`, ephemeral: true });
+  };
+
+  private executeLeave = async (interaction: CommandInteraction) => {
+    if (interaction.guild == null) {
+      await interaction.reply({ content: "You need to be in a server to use commands.", ephemeral: true });
+      return;
+    }
+
+    const activeGuild = this.activeGuilds.get(interaction.guild.id);
+    if (activeGuild == null) {
+      await interaction.reply({ content: "I am not in any voice channel!", ephemeral: true });
+      return;
+    }
+
+    activeGuild.audioPlayer?.stop();
+    activeGuild.voiceConnection.destroy();
+    this.activeGuilds.delete(interaction.guild.id);
+
+    await interaction.reply({ content: "Left the server!", ephemeral: true });
+  };
+
+  private executeAudioCommand = async (command: AudioCommand, interaction: CommandInteraction) => {
+    if (interaction.guild == null) {
+      await interaction.reply({ content: "You need to be in a server to use commands.", ephemeral: true });
+      return;
+    }
+
+    const member = interaction.guild.members.cache.get(interaction.user.id);
+    if (member == null) {
+      console.error(`"member" is null for user "${interaction.user.tag} (${interaction.user.id})".`);
+      await interaction.reply({ content: "Sorry, there was an error executing you command.", ephemeral: true });
+      return;
+    }
+
+    if (member.voice.channel == null) {
+      await interaction.reply({ content: "You are not currently in any voice channel!", ephemeral: true });
+      return;
+    }
+
+    if (this.activeGuilds.has(interaction.guild.id)) {
+      await interaction.reply({ content: "I am already in use!", ephemeral: true });
+      return;
+    }
 
     const voiceConnection = joinVoiceChannel({
       channelId: member.voice.channel.id,
@@ -145,20 +284,22 @@ export class Bot {
       adapterCreator: interaction.guild.voiceAdapterCreator,
     });
 
-    this.voiceConnections.set(interaction.guild.id, voiceConnection);
+    const audioResource = createAudioResource(command.file);
+    const audioPlayer = createAudioPlayer();
+    this.activeGuilds.set(interaction.guild.id, { voiceConnection, audioPlayer });
 
     await entersState(voiceConnection, VoiceConnectionStatus.Ready, 5_000);
 
-    const audioResource = createAudioResource(command.file);
-    const audioPlayer = createAudioPlayer();
-    audioPlayer.play(audioResource);
     voiceConnection.subscribe(audioPlayer);
+    audioPlayer.play(audioResource);
+
+    await interaction.reply({ content: `Playing "${command.name}"...`, ephemeral: true });
 
     await entersState(audioPlayer, AudioPlayerStatus.Idle, 30_000);
 
     audioPlayer.stop();
     voiceConnection.destroy();
 
-    this.voiceConnections.delete(interaction.guild.id);
+    this.activeGuilds.delete(interaction.guild.id);
   };
 }

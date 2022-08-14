@@ -1,7 +1,7 @@
 {
 	"compilerOptions": {
 	  "target": "es2021",
-	  "module": "es2022",
+	  "module": "commonjs",
 	  "moduleResolution": "node16",
 	  "outDir": "out",
 	  "strict": true,

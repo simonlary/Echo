@@ -7,7 +7,6 @@
 	},
 	"main": "index.js",
 	"license": "MIT",
-	"type": "module",
 	"engines": {
 		"node": ">=16.6.0"
 	},
