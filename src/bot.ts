@@ -41,7 +41,7 @@ export class Bot {
     return bot;
   }
 
-  private commands: AudioCommand[] = [];
+  private audioCommands: AudioCommand[] = [];
 
   private constructor(private readonly config: Config, private readonly client: Client) {
     this.client.on("disconnect", () => {
@@ -51,19 +51,19 @@ export class Bot {
   }
 
   private async init() {
-    this.commands = await this.getAllCommands(this.config.commandsFolder);
-    const baseAudioCommands = this.getBaseSlashCommands();
-    const slashAudioCommands = this.commands.map((c) => this.getSlashCommandForCommand(c));
+    this.audioCommands = await this.getAllCommands(this.config.commandsFolder);
+    // const baseAudioCommands = this.getBaseSlashCommands();
+    // const slashAudioCommands = this.audioCommands.map((c) => this.getSlashCommandForCommand(c));
 
-    const applicationId = this.client.application?.id;
-    if (applicationId == null) {
-      throw new Error("Couldn't get the application id.");
-    }
+    // const applicationId = this.client.application?.id;
+    // if (applicationId == null) {
+    //   throw new Error("Couldn't get the application id.");
+    // }
 
-    const rest = new REST().setToken(this.config.token);
+    // const rest = new REST().setToken(this.config.token);
 
-    const promises = this.config.guilds.map(guildId => rest.put(Routes.applicationGuildCommands(applicationId, guildId), { body: [...baseAudioCommands, ...slashAudioCommands] }));
-    await Promise.all(promises);
+    // const promises = this.config.guilds.map(guildId => rest.put(Routes.applicationGuildCommands(applicationId, guildId), { body: [...baseAudioCommands, ...slashAudioCommands] }));
+    // await Promise.all(promises);
   }
 
   public shutdown() {
@@ -104,16 +104,20 @@ export class Bot {
       return;
     }
 
-    const command = this.commands.find((c) => c.name === interaction.commandName);
-    if (command == null) {
-      console.warn(`Received an invalid command name to execute : ${interaction.commandName}`);
-      return;
-    }
-
-    console.log(`User "${interaction.user.tag}" (${interaction.user.id}) executed command "${command.name}".`);
+    console.log(`User "${interaction.user.tag}" (${interaction.user.id}) executed command "${interaction.commandName}".`);
 
     try {
-      await this.executeCommand(command, interaction);
+      if (interaction.commandName === "join") {
+        this.executeJoin(interaction);
+      } else if (interaction.commandName === "leave") {
+        this.executeLeave(interaction);
+      } else {
+        const audioCommand = this.audioCommands.find((c) => c.name === interaction.commandName);
+        if (audioCommand == null) {
+          throw new Error(`Received an invalid command name to execute : ${interaction.commandName}`);
+        }
+        await this.executeAudioCommand(audioCommand, interaction);
+      }
     } catch (e) {
       console.error(e);
       if (interaction.replied) {
@@ -124,7 +128,59 @@ export class Bot {
     }
   };
 
-  private executeCommand = async (command: AudioCommand, interaction: CommandInteraction) => {
+  private executeJoin = async (interaction: CommandInteraction) => {
+    if (interaction.guild == null) {
+      await interaction.reply({ content: "You need to be in a server to use commands.", ephemeral: true });
+      return;
+    }
+
+    const member = interaction.guild.members.cache.get(interaction.user.id);
+    if (member == null) {
+      console.error(`"member" is null for user "${interaction.user.tag} (${interaction.user.id})".`);
+      await interaction.reply({ content: "Sorry, there was an error executing you command.", ephemeral: true });
+      return;
+    }
+
+    if (member.voice.channel == null) {
+      await interaction.reply({ content: "You are not currently in any voice channel!", ephemeral: true });
+      return;
+    }
+
+    if (this.voiceConnections.has(interaction.guild.id)) {
+      await interaction.reply({ content: "I am already in use!", ephemeral: true });
+      return;
+    }
+
+    const voiceConnection = joinVoiceChannel({
+      channelId: member.voice.channel.id,
+      guildId: interaction.guild.id,
+      adapterCreator: interaction.guild.voiceAdapterCreator,
+    });
+
+    this.voiceConnections.set(interaction.guild.id, voiceConnection);
+
+    await interaction.reply({ content: `Joined channel: ${member.voice.channel}`, ephemeral: true });
+  };
+
+  private executeLeave = async (interaction: CommandInteraction) => {
+    if (interaction.guild == null) {
+      await interaction.reply({ content: "You need to be in a server to use commands.", ephemeral: true });
+      return;
+    }
+
+    const currentVoiceConnection = this.voiceConnections.get(interaction.guild.id);
+    if (currentVoiceConnection == null) {
+      await interaction.reply({ content: "I am not in any voice channel!", ephemeral: true });
+      return;
+    }
+
+    currentVoiceConnection.destroy();
+    this.voiceConnections.delete(interaction.guild.id);
+
+    await interaction.reply({ content: "Left the server!", ephemeral: true });
+  };
+
+  private executeAudioCommand = async (command: AudioCommand, interaction: CommandInteraction) => {
     if (interaction.guild == null) {
       await interaction.reply({ content: "You need to be in a server to use commands.", ephemeral: true });
       return;
