@@ -12,26 +12,32 @@
 		"node": ">=16.6.0"
 	},
 	"scripts": {
-		"lint": "eslint src/** --fix",
 		"build": "tsc",
 		"start": "npm run build && npm run deploy",
-		"deploy": "node ./out/index.js"
+		"deploy": "node ./out/index.js",
+		"lint": "eslint src/**/*.{js,jsx,ts,tsx,json}",
+		"lint:fix": "eslint --fix src/**/*.{js,jsx,ts,tsx,json}",
+		"format": "prettier --write src/**/*.{js,jsx,ts,tsx,css,md,json} --config ./.prettierrc"
 	},
 	"dependencies": {
-		"@discordjs/builders": "^0.15.0",
-		"@discordjs/rest": "^0.5.0",
-		"@discordjs/voice": "^0.10.0",
-		"discord-api-types": "^0.35.0",
-		"discord.js": "^13.8.1",
+		"@discordjs/voice": "^0.11.0",
+		"discord-speech-recognition": "^3.0.1",
+		"discord.js": "^14.2.0",
 		"dotenv": "^16.0.1",
-		"ffmpeg-static": "^5.0.0",
+		"ffmpeg-static": "^5.0.2",
 		"libsodium-wrappers": "^0.7.10",
 		"opusscript": "^0.0.8"
 	},
 	"devDependencies": {
-		"@typescript-eslint/eslint-plugin": "^5.29.0",
-		"@typescript-eslint/parser": "^5.29.0",
-		"eslint": "^8.18.0",
+		"@trivago/prettier-plugin-sort-imports": "^3.3.0",
+		"@typescript-eslint/eslint-plugin": "^5.33.0",
+		"@typescript-eslint/parser": "^5.33.0",
+		"eslint": "^8.22.0",
+		"eslint-config-prettier": "^8.5.0",
+		"eslint-import-resolver-typescript": "^3.4.1",
+		"eslint-plugin-import": "^2.26.0",
+		"eslint-plugin-prettier": "^4.2.1",
+		"prettier": "^2.7.1",
 		"typescript": "^4.7.4"
 	}
 }
