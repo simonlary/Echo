@@ -7,7 +7,7 @@ import { readdir } from "fs/promises";
 import { parse, join } from "path";
 import { Config } from "./config.js";
 
-interface Command {
+interface AudioCommand {
     name: string;
     file: string;
 }
@@ -37,7 +37,7 @@ export class Bot {
         return bot;
     }
 
-    private commands: Command[] = [];
+    private audioCommands: AudioCommand[] = [];
 
     private constructor(
         private readonly config: Config,
@@ -48,8 +48,9 @@ export class Bot {
     }
 
     private async init() {
-        this.commands = await this.getAllCommands(this.config.commandsFolder);
-        const slashCommands = this.commands.map(c => this.getSlashCommandForCommand(c));
+        this.audioCommands = await this.getAllCommands(this.config.commandsFolder);
+        const baseAudioCommands = this.getBaseSlashCommands();
+        const slashAudioCommands = this.audioCommands.map(c => this.getSlashCommandForCommand(c));
 
         const applicationId = this.client.application?.id;
         if (applicationId == null) {
@@ -58,7 +59,7 @@ export class Bot {
 
         const rest = new REST({ version: "9" }).setToken(this.config.token);
 
-        const promises = this.config.guilds.map(guildId => rest.put(Routes.applicationGuildCommands(applicationId, guildId), { body: slashCommands }));
+        const promises = this.config.guilds.map(guildId => rest.put(Routes.applicationGuildCommands(applicationId, guildId), { body: [...baseAudioCommands, ...slashAudioCommands] }));
         await Promise.all(promises);
     }
 
@@ -79,11 +80,22 @@ export class Bot {
         }
     }
 
-    private getSlashCommandForCommand(command: Command) {
+    private getSlashCommandForCommand(command: AudioCommand) {
         return new SlashCommandBuilder()
             .setName(command.name)
             .setDescription(`Play the "${command.name}" audio.`)
             .toJSON();
+    }
+
+    private getBaseSlashCommands() {
+        return [
+            new SlashCommandBuilder()
+                .setName("join")
+                .setDescription("Make the bot join the voice channel and and start to listen for triggering keywords."),
+            new SlashCommandBuilder()
+                .setName("leave")
+                .setDescription("Make the bot leave the voice channel."),
+        ];
     }
 
     private onInteractionCreate = async (interaction: Interaction) => {
@@ -92,7 +104,7 @@ export class Bot {
             return;
         }
 
-        const command = this.commands.find(c => c.name === interaction.commandName);
+        const command = this.audioCommands.find(c => c.name === interaction.commandName);
         if (command == null) {
             console.warn(`Received an invalid command name to execute : ${interaction.commandName}`);
             return;
@@ -112,7 +124,7 @@ export class Bot {
         }
     };
 
-    private executeCommand = async (command: Command, interaction: CommandInteraction) => {
+    private executeCommand = async (command: AudioCommand, interaction: CommandInteraction) => {
         if (interaction.guild == null) {
             await interaction.reply({ content: "You need to be in a server to use commands.", ephemeral: true });
             return;
