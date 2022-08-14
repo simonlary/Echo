@@ -7,7 +7,8 @@ import {
   VoiceConnection,
   VoiceConnectionStatus,
 } from "@discordjs/voice";
-import { Client, CommandInteraction, Interaction, REST, Routes, SlashCommandBuilder } from "discord.js";
+import { addSpeechEvent, resolveSpeechWithWitai, VoiceMessage } from "discord-speech-recognition";
+import { Client, CommandInteraction, Interaction, SlashCommandBuilder } from "discord.js";
 import { readdir } from "fs/promises";
 import { parse, join } from "path";
 import { Config } from "./config.js";
@@ -26,6 +27,12 @@ export class Bot {
     console.log("Creating client...");
     const client = new Client({
       intents: ["Guilds", "GuildVoiceStates"],
+    });
+
+    console.log("Attaching speech listener...");
+    addSpeechEvent(client, {
+      key: config.witAiToken,
+      speechRecognition: resolveSpeechWithWitai,
     });
 
     console.log("Creating bot...");
@@ -48,6 +55,7 @@ export class Bot {
       console.log("Disconnected");
     });
     this.client.on("interactionCreate", this.onInteractionCreate);
+    this.client.on("speech", this.onSpeech);
   }
 
   private async init() {
@@ -92,9 +100,7 @@ export class Bot {
       new SlashCommandBuilder()
         .setName("join")
         .setDescription("Make the bot join the voice channel and and start to listen for triggering keywords."),
-      new SlashCommandBuilder()
-        .setName("leave")
-        .setDescription("Make the bot leave the voice channel."),
+      new SlashCommandBuilder().setName("leave").setDescription("Make the bot leave the voice channel."),
     ];
   }
 
@@ -104,7 +110,9 @@ export class Bot {
       return;
     }
 
-    console.log(`User "${interaction.user.tag}" (${interaction.user.id}) executed command "${interaction.commandName}".`);
+    console.log(
+      `User "${interaction.user.tag}" (${interaction.user.id}) executed command "${interaction.commandName}".`
+    );
 
     try {
       if (interaction.commandName === "join") {
@@ -126,6 +134,15 @@ export class Bot {
         await interaction.reply({ content: "Sorry, there was an error executing you command.", ephemeral: true });
       }
     }
+  };
+
+  private onSpeech = async (message: VoiceMessage) => {
+    console.log("----- onSpeech -----");
+    console.log(`author: ${message.author.username}`);
+    console.log(`guild: ${message.guild.name}`);
+    console.log(`channel: ${message.channel.name}`);
+    console.log(`duration: ${message.duration}`);
+    console.log(`content: ${message.content}`);
   };
 
   private executeJoin = async (interaction: CommandInteraction) => {
@@ -154,6 +171,7 @@ export class Bot {
     const voiceConnection = joinVoiceChannel({
       channelId: member.voice.channel.id,
       guildId: interaction.guild.id,
+      selfDeaf: false,
       adapterCreator: interaction.guild.voiceAdapterCreator,
     });
 
