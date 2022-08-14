@@ -77,6 +77,12 @@ export class Bot {
 
   private async init() {
     this.audioCommands = await this.getAllCommands(this.config.commandsFolder);
+
+    if (!this.config.registerCommands) {
+      console.log("Skipping registering commands!");
+      return;
+    }
+
     const baseAudioCommands = this.getBaseSlashCommands();
     const slashAudioCommands = this.audioCommands.map((c) => this.getSlashCommandForCommand(c));
 
