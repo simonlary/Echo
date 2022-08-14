@@ -9,7 +9,15 @@ import {
   VoiceConnectionStatus,
 } from "@discordjs/voice";
 import { addSpeechEvent, resolveSpeechWithWitai, VoiceMessage } from "discord-speech-recognition";
-import { Client, CommandInteraction, Interaction, SlashCommandBuilder, TextBasedChannel } from "discord.js";
+import {
+  Client,
+  CommandInteraction,
+  Interaction,
+  REST,
+  Routes,
+  SlashCommandBuilder,
+  TextBasedChannel,
+} from "discord.js";
 import { readdir } from "fs/promises";
 import { parse, join } from "path";
 import { Config } from "./config.js";
@@ -67,18 +75,22 @@ export class Bot {
 
   private async init() {
     this.audioCommands = await this.getAllCommands(this.config.commandsFolder);
-    // const baseAudioCommands = this.getBaseSlashCommands();
-    // const slashAudioCommands = this.audioCommands.map((c) => this.getSlashCommandForCommand(c));
+    const baseAudioCommands = this.getBaseSlashCommands();
+    const slashAudioCommands = this.audioCommands.map((c) => this.getSlashCommandForCommand(c));
 
-    // const applicationId = this.client.application?.id;
-    // if (applicationId == null) {
-    //   throw new Error("Couldn't get the application id.");
-    // }
+    const applicationId = this.client.application?.id;
+    if (applicationId == null) {
+      throw new Error("Couldn't get the application id.");
+    }
 
-    // const rest = new REST().setToken(this.config.token);
+    const rest = new REST().setToken(this.config.token);
 
-    // const promises = this.config.guilds.map(guildId => rest.put(Routes.applicationGuildCommands(applicationId, guildId), { body: [...baseAudioCommands, ...slashAudioCommands] }));
-    // await Promise.all(promises);
+    const promises = this.config.guilds.map((guildId) =>
+      rest.put(Routes.applicationGuildCommands(applicationId, guildId), {
+        body: [...baseAudioCommands, ...slashAudioCommands],
+      })
+    );
+    await Promise.all(promises);
   }
 
   public shutdown() {
