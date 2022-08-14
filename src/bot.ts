@@ -35,6 +35,7 @@ interface ActiveGuild {
 
 export class Bot {
   private static readonly SUPPORTED_EXTENSIONS = [".wav", ".mp3"];
+  private static readonly SPEECH_RECOGNITION_GROUP = "SPEECH_RECOGNITION_GROUP";
 
   private readonly activeGuilds = new Map<string, ActiveGuild>();
 
@@ -47,6 +48,7 @@ export class Bot {
     console.log("Attaching speech listener...");
     addSpeechEvent(client, {
       key: config.witAiToken,
+      group: Bot.SPEECH_RECOGNITION_GROUP,
       speechRecognition: resolveSpeechWithWitai,
     });
 
@@ -227,6 +229,7 @@ export class Bot {
     const voiceConnection = joinVoiceChannel({
       channelId: member.voice.channel.id,
       guildId: interaction.guild.id,
+      group: Bot.SPEECH_RECOGNITION_GROUP,
       selfDeaf: false,
       adapterCreator: interaction.guild.voiceAdapterCreator,
     });
