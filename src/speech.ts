@@ -24,16 +24,16 @@ export type ClientWithSpeech = Client & {
   on(event: "speech", listener: (message: VoiceMessage) => Awaitable<void>): ClientWithSpeech;
 };
 
-const speechResolver = new SpeechResolver();
+export function wrapClientWithSpeech(client: Client, audioCommands: string[], group: string): ClientWithSpeech {
+  const speechResolver = new SpeechResolver(audioCommands);
 
-export function wrapClientWithSpeech(client: Client, option: { group?: string } = {}): ClientWithSpeech {
   return client.on("voiceStateUpdate", async (_oldVoiceState, newVoiceState) => {
     const channel = newVoiceState.channel;
     if (channel == null) {
       return;
     }
 
-    const connection = getVoiceConnection(channel.guild.id, option.group);
+    const connection = getVoiceConnection(channel.guild.id, group);
 
     if (connection != null && !isSpeechHandlerAttachedToConnection(connection)) {
       await entersState(connection, VoiceConnectionStatus.Ready, 20_000);

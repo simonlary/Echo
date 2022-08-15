@@ -17,15 +17,8 @@ import {
   SlashCommandBuilder,
   TextBasedChannel,
 } from "discord.js";
-import { readdir } from "fs/promises";
-import { parse, join } from "path";
-import { Config } from "./config.js";
+import { AudioCommand, Config } from "./config.js";
 import { ClientWithSpeech, VoiceMessage, wrapClientWithSpeech } from "./speech.js";
-
-interface AudioCommand {
-  name: string;
-  file: string;
-}
 
 interface ActiveGuild {
   voiceConnection: VoiceConnection;
@@ -34,7 +27,6 @@ interface ActiveGuild {
 }
 
 export class Bot {
-  private static readonly SUPPORTED_EXTENSIONS = [".wav", ".mp3"];
   private static readonly SPEECH_RECOGNITION_GROUP = "SPEECH_RECOGNITION_GROUP";
 
   private readonly activeGuilds = new Map<string, ActiveGuild>();
@@ -46,7 +38,11 @@ export class Bot {
     });
 
     console.log("Attaching speech listener...");
-    const clientWithSpeech = wrapClientWithSpeech(client, { group: Bot.SPEECH_RECOGNITION_GROUP });
+    const clientWithSpeech = wrapClientWithSpeech(
+      client,
+      config.audioCommands.map((c) => c.name),
+      Bot.SPEECH_RECOGNITION_GROUP
+    );
 
     console.log("Creating bot...");
     const bot = new Bot(config, clientWithSpeech);
@@ -54,14 +50,14 @@ export class Bot {
     console.log("Logging in...");
     await clientWithSpeech.login(config.token);
 
-    console.log("Registering all commands...");
-    await bot.init();
+    if (config.registerCommands) {
+      console.log("Registering all commands...");
+      await bot.registerCommands();
+    }
 
     console.log("Bot started!");
     return bot;
   }
-
-  private audioCommands: AudioCommand[] = [];
 
   private constructor(private readonly config: Config, private readonly client: ClientWithSpeech) {
     this.client.on("disconnect", () => {
@@ -71,16 +67,9 @@ export class Bot {
     this.client.on("speech", this.onSpeech);
   }
 
-  private async init() {
-    this.audioCommands = await this.getAllCommands(this.config.commandsFolder);
-
-    if (!this.config.registerCommands) {
-      console.log("Skipping registering commands!");
-      return;
-    }
-
+  private async registerCommands() {
     const baseAudioCommands = this.getBaseSlashCommands();
-    const slashAudioCommands = this.audioCommands.map((c) => this.getSlashCommandForCommand(c));
+    const slashAudioCommands = this.config.audioCommands.map((c) => this.getSlashCommandForCommand(c));
 
     const applicationId = this.client.application?.id;
     if (applicationId == null) {
@@ -100,18 +89,6 @@ export class Bot {
   public shutdown() {
     console.log("Shutting down...");
     this.client.destroy();
-  }
-
-  private async getAllCommands(commandsFolder: string) {
-    try {
-      return (await readdir(commandsFolder))
-        .map((f) => parse(f))
-        .filter((f) => Bot.SUPPORTED_EXTENSIONS.includes(f.ext))
-        .map((f) => ({ name: f.name, file: join(commandsFolder, f.base) }));
-    } catch (e) {
-      console.warn(`Commands folder could not be loaded : ${e}`);
-      return [];
-    }
   }
 
   private getSlashCommandForCommand(command: AudioCommand) {
@@ -143,7 +120,7 @@ export class Bot {
       } else if (interaction.commandName === "leave") {
         this.executeLeave(interaction);
       } else {
-        const audioCommand = this.audioCommands.find((c) => c.name === interaction.commandName);
+        const audioCommand = this.config.audioCommands.find((c) => c.name === interaction.commandName);
         if (audioCommand == null) {
           throw new Error(`Received an invalid command name to execute : ${interaction.commandName}`);
         }
@@ -168,7 +145,7 @@ export class Bot {
       .replace(/['!"#$%&\\'()*+,\-./:;<=>?@[\\\]^_`{|}~']/g, " ")
       .split(" ")
       .map((w) => w.toLowerCase());
-    const command = this.audioCommands.find((c) => words.includes(c.name.toLowerCase()));
+    const command = this.config.audioCommands.find((c) => words.includes(c.name.toLowerCase()));
 
     if (command == null) {
       return; // No audio command trigger word was said.

@@ -6,7 +6,7 @@ import { Config } from "./config.js";
 
   try {
     console.log("Loading config...");
-    const config = new Config();
+    const config = await Config.create();
 
     console.log("Instanciating bot...");
     // We need to keep this reference so the bot doesn't get garbage collected.
