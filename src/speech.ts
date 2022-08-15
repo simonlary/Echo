@@ -6,8 +6,8 @@ import {
   VoiceConnectionStatus,
 } from "@discordjs/voice";
 import { Awaitable, Client, User, VoiceBasedChannel } from "discord.js";
-import OpusScript from "opusscript";
-import { resolveSpeech } from "./resolveSpeech.js";
+import prism from "prism-media";
+import { SpeechResolver } from "./speechResolver.js";
 
 // Based a lot on `discord-speech-recognition` : https://github.com/Rei-x/discord-speech-recognition
 
@@ -18,16 +18,13 @@ export interface VoiceMessage {
   client: Client;
   connection: VoiceConnection;
   content?: string;
-  duration: number;
 }
 
 export type ClientWithSpeech = Client & {
   on(event: "speech", listener: (message: VoiceMessage) => Awaitable<void>): ClientWithSpeech;
 };
 
-const SAMPLING_RATE = 48_000;
-const CHANNELS = 2;
-const encoder = new OpusScript(SAMPLING_RATE, CHANNELS, OpusScript.Application.AUDIO);
+const speechResolver = new SpeechResolver();
 
 export function wrapClientWithSpeech(client: Client, option: { group?: string } = {}): ClientWithSpeech {
   return client.on("voiceStateUpdate", async (_oldVoiceState, newVoiceState) => {
@@ -55,23 +52,46 @@ export function wrapClientWithSpeech(client: Client, option: { group?: string } 
           },
         });
 
-        const bufferData: Uint8Array[] = [];
+        const buffers: Buffer[] = [];
         opusStream
+          .pipe(new prism.opus.Decoder({ rate: 48_000, channels: 2, frameSize: 960 }))
+          .pipe(
+            new prism.FFmpeg({
+              args: [
+                "-analyzeduration",
+                "0",
+                "-loglevel",
+                "0",
+                "-f",
+                "s16le",
+                "-ar",
+                "48000",
+                "-ac",
+                "2",
+                "-i",
+                "-",
+                "-f",
+                "s16le",
+                "-ar",
+                "16000",
+                "-ac",
+                "1",
+              ],
+            })
+          )
           .on("data", (chunk) => {
-            bufferData.push(encoder.decode(chunk));
+            buffers.push(chunk);
           })
           .on("end", async () => {
-            const stereoBuffer = Buffer.concat(bufferData);
-            const monoBuffer = convertStereoToMono(stereoBuffer);
+            const resultBuffer = Buffer.concat(buffers);
 
             const message: VoiceMessage = {
               author,
-              audioBuffer: stereoBuffer,
+              audioBuffer: resultBuffer,
               channel,
               client,
               connection,
-              content: await resolveSpeech(monoBuffer),
-              duration: monoBuffer.length / SAMPLING_RATE / CHANNELS,
+              content: await speechResolver.resolveSpeech(resultBuffer),
             };
             client.emit("speech", message);
           });

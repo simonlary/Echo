@@ -257,7 +257,7 @@ export class Bot {
     activeGuild.voiceConnection.destroy();
     this.activeGuilds.delete(interaction.guild.id);
 
-    await interaction.reply({ content: "Left the server!", ephemeral: true });
+    await interaction.reply({ content: "Left the channel!", ephemeral: true });
   };
 
   private executeAudioCommand = async (command: AudioCommand, interaction: CommandInteraction) => {
