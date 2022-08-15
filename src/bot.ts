@@ -8,7 +8,6 @@ import {
   VoiceConnection,
   VoiceConnectionStatus,
 } from "@discordjs/voice";
-import { addSpeechEvent, resolveSpeechWithWitai, VoiceMessage } from "discord-speech-recognition";
 import {
   Client,
   CommandInteraction,
@@ -21,6 +20,7 @@ import {
 import { readdir } from "fs/promises";
 import { parse, join } from "path";
 import { Config } from "./config.js";
+import { ClientWithSpeech, VoiceMessage, wrapClientWithSpeech } from "./speech.js";
 
 interface AudioCommand {
   name: string;
@@ -46,17 +46,13 @@ export class Bot {
     });
 
     console.log("Attaching speech listener...");
-    addSpeechEvent(client, {
-      key: config.witAiToken,
-      group: Bot.SPEECH_RECOGNITION_GROUP,
-      speechRecognition: resolveSpeechWithWitai,
-    });
+    const clientWithSpeech = wrapClientWithSpeech(client, { group: Bot.SPEECH_RECOGNITION_GROUP });
 
     console.log("Creating bot...");
-    const bot = new Bot(config, client);
+    const bot = new Bot(config, clientWithSpeech);
 
     console.log("Logging in...");
-    await client.login(config.token);
+    await clientWithSpeech.login(config.token);
 
     console.log("Registering all commands...");
     await bot.init();
@@ -67,7 +63,7 @@ export class Bot {
 
   private audioCommands: AudioCommand[] = [];
 
-  private constructor(private readonly config: Config, private readonly client: Client) {
+  private constructor(private readonly config: Config, private readonly client: ClientWithSpeech) {
     this.client.on("disconnect", () => {
       console.log("Disconnected");
     });
@@ -178,7 +174,7 @@ export class Bot {
       return; // No audio command trigger word was said.
     }
 
-    const activeGuild = this.activeGuilds.get(message.guild.id);
+    const activeGuild = this.activeGuilds.get(message.channel.guild.id);
 
     if (activeGuild == null) {
       console.error("activeGuild was null/undefined");
