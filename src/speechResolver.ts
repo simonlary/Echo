@@ -13,7 +13,6 @@ export class SpeechResolver {
 
   public resolveSpeech = async (audioBuffer: Buffer): Promise<string> => {
     const result = this.model.stt(audioBuffer);
-    console.log(result);
     return result;
   };
 }
