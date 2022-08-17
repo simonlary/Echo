@@ -24,8 +24,12 @@ export type ClientWithSpeech = Client & {
   on(event: "speech", listener: (message: VoiceMessage) => Awaitable<void>): ClientWithSpeech;
 };
 
-export function wrapClientWithSpeech(client: Client, audioCommands: string[], group: string): ClientWithSpeech {
-  const speechResolver = new SpeechResolver(audioCommands);
+export async function wrapClientWithSpeech(
+  client: Client,
+  audioCommands: string[],
+  group: string
+): Promise<ClientWithSpeech> {
+  const speechResolver = await SpeechResolver.create(audioCommands);
 
   return client.on("voiceStateUpdate", async (_oldVoiceState, newVoiceState) => {
     const channel = newVoiceState.channel;

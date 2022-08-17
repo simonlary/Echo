@@ -38,7 +38,7 @@ export class Bot {
     });
 
     console.log("Attaching speech listener...");
-    const clientWithSpeech = wrapClientWithSpeech(
+    const clientWithSpeech = await wrapClientWithSpeech(
       client,
       config.audioCommands.map((c) => c.name),
       Bot.SPEECH_RECOGNITION_GROUP

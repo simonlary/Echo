@@ -23,3 +23,5 @@ npm-debug.log
 .env
 # -------[Commands test folder]-------- #
 audioCommands
+# -------[model folder]-------- #
+model
