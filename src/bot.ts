@@ -163,7 +163,6 @@ export class Bot {
     }
 
     console.log(`Found audio command "${command.name}" in text : "${message.content}"`);
-    await activeGuild.textChannel?.send(`${message.author} just said : *${command.name}*`);
 
     const audioResource = createAudioResource(command.file);
     const audioPlayer = createAudioPlayer();

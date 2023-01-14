@@ -2,4 +2,4 @@
 
 ## Dependencies
 
-- Node.js >=16.6.0
+- Node.js >=16.9.0
