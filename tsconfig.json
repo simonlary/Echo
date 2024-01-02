@@ -1,14 +1,12 @@
 {
-  "compilerOptions": {
-    "target": "es2022",
-    "module": "es2022",
-    "moduleResolution": "node16",
-    "outDir": "out",
-    "strict": true,
-    "esModuleInterop": true,
-    "emitDecoratorMetadata": true,
-    "experimentalDecorators": true,
-    "skipLibCheck": true
-  },
-  "include": ["src/**/*"]
+    "compilerOptions": {
+        "target": "ES2021",
+        "module": "NodeNext",
+        "moduleResolution": "Node16",
+        "outDir": "out",
+        "strict": true,
+        "esModuleInterop": true,
+        "baseUrl": "."
+    },
+    "include": ["src/**/*"]
 }

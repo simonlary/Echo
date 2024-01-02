@@ -1,5 +1,0 @@
-{
-    "printWidth": 120,
-    "importOrder": ["^@/(.*)$", "^[./]"],
-    "importOrderParserPlugins": ["typescript", "decorators-legacy"]
-}

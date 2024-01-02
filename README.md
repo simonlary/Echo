@@ -1,5 +1,3 @@
-# Echo: A Discord Audio Clip Bot
+# Echo
 
-## Dependencies
-
-- Node.js >=16.9.0
+A Discord bot to play some custom audio clips.
