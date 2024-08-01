@@ -1,12 +1,21 @@
 {
     "compilerOptions": {
-        "target": "ES2021",
-        "module": "NodeNext",
+        "target": "ES2022",
+        "lib": ["ES2023"],
+        "module": "Node16",
+        "skipLibCheck": true,
+
         "moduleResolution": "Node16",
+        "isolatedModules": true,
+        "moduleDetection": "force",
         "outDir": "out",
+        "baseUrl": ".",
+
+        /* Linting */
         "strict": true,
-        "esModuleInterop": true,
-        "baseUrl": "."
+        "noUnusedLocals": true,
+        "noUnusedParameters": true,
+        "noFallthroughCasesInSwitch": true
     },
     "include": ["src/**/*"]
 }
